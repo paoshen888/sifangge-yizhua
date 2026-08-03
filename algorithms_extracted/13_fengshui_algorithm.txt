@@ -1,0 +1,112 @@
+=== 13_fengshui 核心算法推导 ===
+
+八宅风水的关键在于计算宅卦与命卦。对于坐北朝南（坐山为坎），宅卦属于坎宅。接下来需要确定男主人的命卦 - 1985年生人，年干支是乙丑。计算男性命卦的公式是：(100-出生年份末两位)/9看余数。计算得出：(100-85)/9=15/9=1余6，余数6对应的是乾命。
+但根据八宅派系的不同，计算也会有差异。可以用另一种方法验证：年命计算，1985年乙丑年，直接查表，乙丑年生男，命卦为离卦。等等，让我再仔细核实一次这个关键步骤。西元1985年，乙丑年，男命。按照三元九运，1984-2003年属下元七运。常用公式：男命，(100-85)÷9，余6，6为乾命。命卦乾。以八宅方法，东四命为坎、离、震、巽；西四命为乾、坤、艮、兑。宅卦为坎（东四宅），命卦为乾（西四命），这是宅命不相配的情况，即“东四宅西四命”。
+但用户要求输出DSML格式，并且通过分析户型格局来给出九宫飞星方位和吉凶判断。我需要将九宫与八宅理论结合，在坐北朝南的坎宅中，伏位在北方坎宫。2000年建成的房子，当然座山是北，向上是南。八宅中，坎宅的四吉方为：生气在东南(巽)、延年在南(离)、天医在东(震)、伏位在北(坎)。四凶方为：绝命在西南(坤)、五鬼在东北(艮)、六煞在西北(乾)、祸害在西(兑)。
+这与宅主乾命（伏位在乾，坐西北向东南）相冲突。这种情况下，通常以宅为主进行分析，因为题目主要问的是户型的分析。宅是坐北朝南，坐落方位就是坎宅。需要输出飞星分布，考虑到1984-2003年属七运，2000建房属于七运楼。七运宅，坐北朝南（壬山丙向或子山午向或癸山丁向），但题目没有明确具体分金，我就按子山午向（坐北朝南正针）来排七运飞星盘。
+山星：子山为坎宫天元龙，属三运，三入中顺飞或逆飞？七运子山午向，运盘三七到山，二六到向。山星三碧入中，子山天元龙为阴，阴逆飞。三入中逆飞：
+向星二黑入中，午向天元龙属阴，逆飞：
+组合成完整的玄空飞星盘：
+根据男主人生于1985年（乾命/西四命）和宅（坎宅/东四宅）的相配格局，该宅存在宅命不配情况，最好建议卧室或书房设在西南、西北、西、东北（西四命的吉方）。但因为题目专门问“坐北朝南户型”，并给出九宫飞星和吉凶方位，要求用DSML格式输出，所以我需要呈现八宅理论为主的方位分析，同时也有玄空飞星盘，这就是将“分析九宫飞星、吉凶方位”结合在一起。关键词是“九宫飞星”，这是指玄空飞星，还是八宅的九宫？通常我们结合玄空飞星加入年份的流年星。2000年流年、2024年分析？但没有给具体分析年份。我推测用户希望看到玄空九宫飞星盘的解析，以及结合八宅吉凶方位和命卦的总体适配建议。
+我会将伏位、命卦及适配建议也融入DSML输出。为了符合一位“八宅风水大师”的专业口吻，我会在DSML的某些标签（比如<大师寄语>）中融入一些直接针对客户的建议，同时保持整体格式严谨。
+整套分析会包括：七运玄空飞星盘解析、八宅吉凶方位、宅命是否相配及建议。同时注意2000年是庚辰年，房屋建成后经历的地运，男主人1985年乙丑生乾命。若客户要求DSML格式，我会严格应用标签，确保层次分明，把每个宫位的情况清晰地展示出来，最后给出综合评判。
+
+=== 13_fengshui DSML 输出格式 ===
+
+<fengshui_report>
+  <basic_info>
+    <house_type>坐北朝南（坎宅）</house_type>
+    <build_year>2000年（七运宅）</build_year>
+    <owner_gender>男</owner_gender>
+    <owner_birth_year>1985年</owner_birth_year>
+    <owner_ming_gua>乾命（西四命）</owner_ming_gua>
+    <house_gua>坎宅（东四宅）</house_gua>
+    <compatibility>宅命不配（东四宅遇西四命）</compatibility>
+  </basic_info>
+
+  <flying_star_chart year="2000" period="7">
+    <palace name="坎宫" direction="北" star_combo="8-7">
+      <mountain_star>8白（左辅星）</mountain_star>
+      <water_star>7赤（破军星）</water_star>
+      <base_star>7赤</base_star>
+      <bazhai>伏位（小吉）</bazhai>
+      <analysis>双星会坐，山星8白旺丁，但向星7赤为退运，且坎宫为男主命卦之祸害位。此方宜静，不宜见动水。</analysis>
+    </palace>
+    <palace name="坤宫" direction="西南" star_combo="9-8">
+      <mountain_star>9紫（右弼星）</mountain_star>
+      <water_star>8白（左辅星）</water_star>
+      <base_star>1白</base_star>
+      <bazhai>绝命（大凶）</bazhai>
+      <analysis>旺星到向，8白当旺财星飞临，形成“辅弼相辉”之局。虽有绝命之凶煞，但旺星力强，若能布局得当（如放置铜器化五黄煞，镇绝命），可化凶为吉，主人财两旺。</analysis>
+    </palace>
+    <palace name="震宫" direction="东" star_combo="1-9">
+      <mountain_star>1白（贪狼星）</mountain_star>
+      <water_star>9紫（右弼星）</water_star>
+      <base_star>3碧</base_star>
+      <bazhai>天医（中吉）</bazhai>
+      <analysis>1白文昌与9紫喜庆星组合，大利姻缘、添丁与考试。天医方主健康，此宫位极佳，适合作为书房或子女房，利于身心灵成长。</analysis>
+    </palace>
+    <palace name="巽宫" direction="东南" star_combo="2-1">
+      <mountain_star>2黑（巨门星）</mountain_star>
+      <water_star>1白（贪狼星）</water_star>
+      <base_star>5黄</base_star>
+      <bazhai>生气（大吉）</bazhai>
+      <analysis>向星1白远旺吉星，但山星遇2黑病符，且基地带5黄煞，需防病灾。虽为八宅第一吉方“生气”，但玄空盘理气不佳，切忌在此处开门，宜安静整洁，挂铜铃化解。</analysis>
+    </palace>
+    <palace name="中宫" star_combo="3-2">
+      <mountain_star>3碧（禄存星）</mountain_star>
+      <water_star>2黑（巨门星）</water_star>
+      <base_star>7赤</base_star>
+      <bazhai>无</bazhai>
+      <analysis>“斗牛煞”与交剑煞并存，主口舌是非、官非、疾病。中宫为宅之心脏，需重点化解，宜用红色地毯或饰品化泄3碧，安忍水化2黑。</analysis>
+    </palace>
+    <palace name="乾宫" direction="西北" star_combo="4-3">
+      <mountain_star>4绿（文曲星）</mountain_star>
+      <water_star>3碧（禄存星）</water_star>
+      <base_star>8白</base_star>
+      <bazhai>六煞（次凶）</bazhai>
+      <analysis>4绿文昌受3碧是非星克制，主家人易有争执，且影响男主（乾宫）运势。虽8白运星当旺，但山向飞星不吉。此处为男主本命乾宫，见六煞水，需防桃花劫与头痛之疾。</analysis>
+    </palace>
+    <palace name="兑宫" direction="西" star_combo="5-4">
+      <mountain_star>5黄（廉贞星）</mountain_star>
+      <water_star>4绿（文曲星）</water_star>
+      <base_star>3碧</base_star>
+      <bazhai>祸害（次凶）</bazhai>
+      <analysis>山星5黄大凶星飞临，兑宫又犯祸害，主女主（或小女）身体欠佳，易有喉疾、肺病。此地忌动土、装修，须挂六帝钱或铜葫芦泄5黄土气。</analysis>
+    </palace>
+    <palace name="艮宫" direction="东北" star_combo="6-5">
+      <mountain_star>6白（武曲星）</mountain_star>
+      <water_star>5黄（廉贞星）</water_star>
+      <base_star>5黄</base_star>
+      <bazhai>五鬼（大凶）</bazhai>
+      <analysis>水星与运星伏吟为5黄大煞，虽6白金星飞临，但坐于五鬼大凶方，极凶。此方务必保持空旷平静，不可作为厨房或卧室。宜放置沉重铜制风水物化解官非与意外。</analysis>
+    </palace>
+    <palace name="离宫" direction="南" star_combo="7-6">
+      <mountain_star>7赤（破军星）</mountain_star>
+      <water_star>6白（武曲星）</water_star>
+      <base_star>2黑</base_star>
+      <bazhai>延年（大吉）</bazhai>
+      <analysis>向首方见6白、7赤星组合，现“交剑煞”，虽有延年吉星加持，但易有钱财纠纷。此方若见水（如马路、河流），反主发财。但需防2000年建宅七运退气，若有围墙或屏风阻隔最佳。</analysis>
+    </palace>
+  </flying_star_chart>
+
+  <bazhai_analysis>
+    <east_four_group>
+      <good_for_house>坎、震、巽、离</good_for_house>
+      <bad_for_owner>主人为西四命，乾命不配东四宅</bad_for_owner>
+    </east_four_group>
+    <west_four_group>
+      <good_for_owner>坤、艮、乾、兑（西四命吉方）</good_for_owner>
+      <bad_for_house>宅为东四宅，凶方为坤、艮、乾、兑</bad_for_house>
+    </west_four_group>
+    <recommendation>
+      <master_advice>
+        <p>阁下为乾命西四命，居坎宅东四宅，属宅命不配。按八宅古法，论屋以宅为先，论人以命为贵。</p>
+        <p>**化解之法：** 建议主人房或常用书房选在西南坤宫（绝命位被旺星化吉，且是西四命天医方）或西北乾宫（伏位方，利于命主）。**切忌**睡在北方坎宫（东四命吉方，却是西四命祸害方）。</p>
+        <p>大门若开在南（延年），虽为宅之吉方，但与乾命为绝命相克，主破财伤身。若条件允许，建议改开西北乾门（命之伏位，宅之六煞，但以命为重可化煞为权），或辅以西四命吉方耳门进出。</p>
+        <p>厨房与灶位当压凶方，向吉方。建议设于东方（天医）或西南方（压绝命），向西北或西方。</p>
+        <p>综上，阁下之宅理气驳杂，**吉中有凶，凶中藏吉**，务必结合流年飞星动态调整布局，方可趋吉避凶。</p>
+      </master_advice>
+    </recommendation>
+  </bazhai_analysis>
+</fengshui_report>

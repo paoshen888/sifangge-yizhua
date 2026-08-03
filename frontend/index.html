@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -9,7 +9,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>随身大师 Web 复刻版</title>
+<title>四方阁易爪 Web 复刻版</title>
 <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
@@ -34,7 +34,7 @@
   --sidebar-bg:#16213E;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'HarmonyOS Sans SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:hidden;transition:background 300ms,color 300ms}
+body{font-family:'HarmonyOS Sans SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);width:100%;height:100vh;display:flex;overflow:hidden;transition:background 300ms,color 300ms}
 @font-face{font-family:'HarmonyOS Sans SC';src:url('/static/HarmonyOS_Sans_SC_Regular.ttf');font-weight:400}
 @font-face{font-family:'HarmonyOS Sans SC';src:url('/static/HarmonyOS_Sans_SC_Medium.ttf');font-weight:500}
 @font-face{font-family:'HarmonyOS Sans SC';src:url('/static/HarmonyOS_Sans_SC_Bold.ttf');font-weight:700}
@@ -129,7 +129,7 @@ body{font-family:'HarmonyOS Sans SC','Microsoft YaHei',sans-serif;background:var
 .hist-msg{padding:8px 0}
 
 /* ===== 输入区 ===== */
-.input-area{background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:flex-end;gap:10px;flex-shrink:0;transition:background 300ms}
+.input-area{background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px));display:flex;align-items:flex-end;gap:10px;flex-shrink:0;transition:background 300ms}
 .input-area textarea{flex:1;background:var(--input-bg);border:none;border-radius:20px;padding:10px 16px;font-size:14px;color:var(--text);resize:none;outline:none;line-height:1.4;max-height:120px;font-family:inherit;transition:var(--transition)}
 .input-area textarea:focus{box-shadow:0 0 0 2px rgba(91,104,170,.2)}
 .input-area textarea::placeholder{color:var(--text4)}
@@ -139,7 +139,6 @@ body{font-family:'HarmonyOS Sans SC','Microsoft YaHei',sans-serif;background:var
 
 .input-area .send-btn{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:var(--transition)}
 .input-area .send-btn:hover{background:var(--primary-dark);transform:scale(1.05)}
-.input-area .send-btn:disabled{background:#ccc;cursor:not-allowed;transform:none}
 
 /* ===== 打字指示器 ===== */
 .typing{display:flex;align-items:center;gap:4px;padding:8px 16px}
@@ -148,10 +147,46 @@ body{font-family:'HarmonyOS Sans SC','Microsoft YaHei',sans-serif;background:var
 .typing span:nth-child(3){animation-delay:.4s}
 @keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
 
-/* ===== 快捷入口 ===== */
-.quick-actions{display:flex;gap:6px;padding:8px 16px 0;flex-wrap:wrap;flex-shrink:0}
-.quick-btn{font-size:11px;padding:4px 12px;border-radius:var(--radius-full);border:1px solid var(--border);background:var(--surface);color:var(--text3);cursor:pointer;transition:var(--transition);white-space:nowrap}
-.quick-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(91,104,170,.04)}
+/* ===== 快捷入口（保留旧样式兼容） ===== */
+.quick-actions{display:none}
+.quick-btn{display:none}
+
+/* ===== 引擎选择器 ===== */
+.engine-selector-bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;position:relative;z-index:50}
+.engine-trigger{flex:1;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--input-bg);color:var(--text);font-size:14px;cursor:pointer;transition:border-color .2s,box-shadow .2s;user-select:none}
+.engine-trigger:hover{border-color:var(--primary)}
+.engine-trigger.active{border-color:var(--primary);box-shadow:0 0 0 3px rgba(91,104,170,.12)}
+.engine-arrow{font-size:12px;color:var(--text4);transition:transform .2s}
+.engine-trigger.active .engine-arrow{transform:rotate(180deg)}
+.engine-go-btn{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.engine-go-btn:hover{background:var(--primary-dark);transform:scale(1.05)}
+.engine-go-btn:active{transform:scale(.95)}
+
+/* ===== 引擎底部 Sheet 面板 ===== */
+.engine-sheet-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.35);z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.engine-sheet-overlay.hidden{display:none}
+.engine-sheet{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-width:500px;max-height:72vh;display:flex;flex-direction:column;animation:sheetUp .25s ease-out;overflow:hidden}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.engine-sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 6px;flex-shrink:0}
+
+/* 分类标签行 */
+.eng-tabs{display:flex;gap:8px;padding:4px 16px 8px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.eng-tabs::-webkit-scrollbar{display:none}
+.eng-tab{padding:6px 14px;border-radius:var(--radius-full);font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;transition:all .15s;border:1px solid var(--border2);background:var(--surface);color:var(--text3);flex-shrink:0}
+.eng-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.eng-tab:hover:not(.active){border-color:var(--primary);color:var(--primary)}
+
+/* 引擎卡片网格 */
+.eng-grid{flex:1;overflow-y:auto;padding:0 16px 16px;-webkit-overflow-scrolling:touch}
+.eng-grid .eng-group-title{font-size:11px;font-weight:600;color:var(--text4);padding:8px 4px 4px;text-transform:uppercase;letter-spacing:.5px}
+.eng-grid .eng-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.eng-grid .eng-card{display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;text-align:left}
+.eng-grid .eng-card:hover{border-color:var(--accent);background:var(--surface2)}
+.eng-grid .eng-card.selected{border-color:var(--primary);background:rgba(91,104,170,.06);box-shadow:0 0 0 2px rgba(91,104,170,.12)}
+.eng-grid .eng-card .eng-icon{font-size:22px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);background:var(--surface2);flex-shrink:0}
+.eng-grid .eng-card .eng-info{min-width:0}
+.eng-grid .eng-card .eng-name{font-size:13px;font-weight:600;color:var(--text);display:block;line-height:1.3}
+.eng-grid .eng-card .eng-desc{font-size:10px;color:var(--text4);margin-top:2px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ===== 错误提示 ===== */
 .error-msg{background:#FFF5F5;color:var(--danger);font-size:12px;padding:8px 12px;border-radius:var(--radius-md);border:1px solid #FFCDD2;margin:4px 0}
@@ -422,6 +457,12 @@ body{font-family:'HarmonyOS Sans SC','Microsoft YaHei',sans-serif;background:var
   .sidebar-toggle{display:flex}
   .pillars-grid{grid-template-columns:1fr 1fr}
   .msg{max-width:92%}
+  .engine-sheet{max-height:65vh}
+  .eng-grid .eng-cards{grid-template-columns:1fr 1fr;gap:6px}
+  .eng-grid .eng-card{padding:8px}
+  .eng-grid .eng-card .eng-icon{font-size:20px;width:32px;height:32px}
+  .eng-grid .eng-card .eng-name{font-size:12px}
+  .eng-grid .eng-card .eng-desc{font-size:10px}
 }
 
 /* Toast 动画 */
@@ -452,11 +493,30 @@ body{font-family:'HarmonyOS Sans SC','Microsoft YaHei',sans-serif;background:var
 .compare-view td { padding: 5px 8px; border-bottom: 1px solid var(--border); }
 .compare-view tr:last-child td { border-bottom: none; }
 
+/* ===== 横竖屏自适应 ===== */
+body.landscape .chat-container{max-width:100%!important;margin:0!important}
+body.landscape .msg{max-width:75%!important}
+body.landscape .msg.user .bubble{max-width:70%!important}
+body.landscape .input-area{max-width:100%!important;padding:8px 24px!important}
+body.landscape .bazi-card{max-width:100%!important}
+body.landscape .engine-selector-bar{max-width:100%!important}
+body.landscape .topbar{padding:6px 24px!important}
+body.landscape .messages{padding:12px 24px!important}
+
+body:not(.landscape) .chat-container{max-width:100%}
+
+/* 触屏优化 */
+@media (pointer: coarse) {
+  .send-btn,.attach-btn{min-width:44px;min-height:44px}
+  .engine-go-btn{min-width:44px;min-height:44px}
+  .engine-trigger{min-height:44px;font-size:16px}
+}
+
 </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loading"><div class="spinner"></div><span>随身大师</span></div>
+<div class="loading-overlay" id="loading"><div class="spinner"></div><span>四方阁易爪</span></div>
 
 <!-- 侧边栏 -->
 <div class="sidebar collapsed" id="sidebar">
@@ -474,32 +534,28 @@ body{font-family:'HarmonyOS Sans SC','Microsoft YaHei',sans-serif;background:var
   <!-- 顶栏 -->
   <div class="topbar">
     <button class="btn sidebar-toggle" onclick="toggleSidebar()" title="对话列表">☰</button>
-    <h1>🀄 随身大师</h1>
+    <h1>🀄 四方阁易爪</h1>
     <div class="status" id="status">就绪</div>
     <button class="btn" id="themeToggle" title="切换主题" onclick="toggleTheme()">🌙</button>
     <button class="btn" title="新对话" onclick="newChat()">➕</button>
     <button class="btn" title="清空" onclick="clearChat()">🗑️</button>
   </div>
 
-  <!-- 快捷入口 -->
-  <div class="quick-actions">
-    <button class="quick-btn" onclick="sendQuick('帮我排八字，2000年1月1日12点出生，男性，北京')">📅 八字排盘</button>
-    <button class="quick-btn" onclick="sendQuick('帮我排六爻（时间起卦）')">🔮 六爻起卦</button>
-  <button class="quick-btn" onclick="showDivineOptions()">🪙 手动摇卦</button>
-    <button class="quick-btn" onclick="sendQuick('帮我排六壬盘')">🌀 大六壬</button>
-    <button class="quick-btn" onclick="sendQuick('帮我排奇门遁甲')">🚪 奇门遁甲</button>
-  <button class="quick-btn" onclick="sendQuick('帮我排紫微斗数')">🌟 紫微斗数</button>
-  <button class="quick-btn" onclick="sendQuick('帮我排七政四余')">🌌 七政四余</button>
-  <button class="quick-btn" onclick="sendQuick('帮我排八宅飞星')">🏠 八宅飞星</button>
-  <button class="quick-btn" onclick="sendQuick('帮我算合婚')">💕 八字合婚</button>
-  <button class="quick-btn" onclick="sendQuick('查看今日黄历')">📅 黄历</button>
-  <button class="quick-btn" onclick="sendQuick('分析这个号码13912345678吉凶')">📱 号码吉凶</button>
-    <button class="quick-btn" onclick="sendQuick('今天运势如何')">🌟 今日运势</button>
-    <button class="quick-btn" onclick="sendQuick('我的八字是什么格局')">📊 命盘分析</button>
-    <button class="quick-btn" onclick="sendQuick('帮我排玄空飞星风水，2026年')">🌬️ 风水</button>
-    <button class="quick-btn" onclick="sendQuick('查看今日大盘指数')">📈 大盘</button>
-    <button class="quick-btn" onclick="sendQuick('搜索Chrome最新漏洞')">🛡️ 漏洞</button>
-    <button class="quick-btn" onclick="sendQuick('解读我的八字命盘，2000年1月1日12点男')">📖 命盘解读</button>
+  <!-- 引擎选择器 -->
+  <div class="engine-selector-bar">
+    <div class="engine-trigger" id="engineTrigger" onclick="toggleEnginePanel()">
+      <span id="engineTriggerText">🔍 选择命理引擎...</span>
+      <span class="engine-arrow">▾</span>
+    </div>
+    <button class="engine-go-btn" onclick="goEngine()" title="开始排盘">▶</button>
+  </div>
+  <!-- 引擎面板 → 底部 Sheet -->
+  <div class="engine-sheet-overlay hidden" id="engineSheetOverlay" onclick="if(event.target===this)closeEnginePanel()">
+    <div class="engine-sheet" id="engineSheet">
+      <div class="engine-sheet-handle"></div>
+      <div class="eng-tabs" id="engTabs"></div>
+      <div class="eng-grid" id="engGrid"></div>
+    </div>
   </div>
 
   <!-- 消息列表 -->
@@ -558,14 +614,10 @@ body{font-family:'HarmonyOS Sans SC','Microsoft YaHei',sans-serif;background:var
     <span style="margin-left:auto;">⏱ 运行 <span id="hw-uptime">--</span></span>
   </div>
   <div class="input-area">
-    <button class="attach-btn" id="attachBtn" title="上传图片" onclick="document.getElementById('fileInput').click()">📎</button>
-    <button class="attach-btn" title="截图上传" onclick="triggerScreenshot()">📸</button>
-    <button class="attach-btn" id="voiceBtn" title="语音输入" onclick="toggleVoice()">🎤</button>
-    <button class="attach-btn" title="打印报告" onclick="printChat()">🖨</button>
-    <button class="attach-btn" title="导出对话" onclick="exportChat()">📋</button>
-    <button class="attach-btn" title="取消生成(Esc)" onclick="cancelStream()">⏹</button>
     <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileUpload(event)">
     <textarea id="userInput" placeholder="输入你的问题或出生信息..." rows="1" onkeydown="handleKey(event)" oninput="autoResizeTextarea()"></textarea>
+    <button class="attach-btn" id="attachBtn" title="上传图片" onclick="pickFile()">📎</button>
+    <button class="attach-btn" id="voiceBtn" title="语音输入" onclick="toggleVoice()">🎤</button>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="发送">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 16V8M12 8L8 12M12 8L16 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
@@ -707,7 +759,7 @@ function printChat() {
 function exportChat() {
     var chat = allChats[currentChatId];
     if (!chat || !chat.messages.length) { showToast('没有可导出的对话', 'warning'); return; }
-    var text = '随身大师 - 对话记录\n' + new Date().toISOString().split('T')[0] + '\n' + '-'.repeat(40) + '\n\n';
+    var text = '四方阁易爪 - 对话记录\n' + new Date().toISOString().split('T')[0] + '\n' + '-'.repeat(40) + '\n\n';
     for (var i = 0; i < chat.messages.length; i++) {
         var m = chat.messages[i];
         text += (m.role === 'user' ? '👤 你' : '🤖 大师') + ':\n' + (m.content || '(排盘结果)') + '\n\n';
@@ -769,11 +821,11 @@ async function init() {
     try{
         var ids=Object.keys(allChats);
         if(ids.length){currentChatId=ids[ids.length-1]}
-        else{currentChatId=createChat();addMsgToChat('ai','你好！👋 欢迎来到中华传统术数研习平台。我是随身大师，一位专注于传统命理学分析的专业助理。\n\n## 我可以帮您：\n\n| 术数体系 | 适用场景 |\n|----------|----------|\n| **八字命理** | 命局格局、事业财运、婚姻子女、一生运势 |\n| **大六壬** | 具体事项吉凶发展（婚恋、求职、投资、出行） |\n| **奇门遁甲** | 趋吉避凶、方位择吉、时机选择 |\n| **六爻纳甲** | 一事一占、快速断事吉凶 |\n| **紫微斗数** | 十二宫精批、流年限运精确推算 |\n| **七政四余** | 天星推命、星曜格局、本命大限 |\n\n💡 **小提示**：直接告诉我你的出生年月日时和性别，我就可以帮你排盘分析。比如：\n\n> 1996年8月15日 12:56 男，帮我排八字\n\n有什么想了解的，尽管跟我说~')}
-    }catch(e){currentChatId='fb';allChats.fb={title:'新对话',messages:[{role:'ai',content:'你好！👋 欢迎来到中华传统术数研习平台。我是随身大师，一位专注于传统命理学分析的专业助理。\n\n## 我可以帮您：\n\n| 术数体系 | 适用场景 |\n|----------|----------|\n| **八字命理** | 命局格局、事业财运、婚姻子女、一生运势 |\n| **大六壬** | 具体事项吉凶发展（婚恋、求职、投资、出行） |\n| **奇门遁甲** | 趋吉避凶、方位择吉、时机选择 |\n| **六爻纳甲** | 一事一占、快速断事吉凶 |\n| **紫微斗数** | 十二宫精批、流年限运精确推算 |\n| **七政四余** | 天星推命、星曜格局、本命大限 |\n\n💡 **小提示**：直接告诉我你的出生年月日时和性别，我就可以帮你排盘分析。比如：\n\n> 1996年8月15日 12:56 男，帮我排八字\n\n有什么想了解的，尽管跟我说~',time:Date.now()}],createdAt:Date.now(),updatedAt:Date.now()}}
+        else{currentChatId=createChat();addMsgToChat('ai','你好！👋 我是四方阁易爪，你的命理助手。\n\n**八字命理** 命局格局·事业财运·婚姻子女\n**大六壬** 婚恋求职·投资出行·吉凶断事\n**奇门遁甲** 趋吉避凶·择吉时机\n**六爻纳甲** 一事一占·快速断事\n**紫微斗数** 十二宫精批·流年推算\n**七政四余** 天星推命·格局大限\n\n💡 直接告诉我出生日期+性别，即可排盘。如：*1996年8月15日 12:56 男*')}
+    }catch(e){currentChatId='fb';allChats.fb={title:'新对话',messages:[{role:'ai',content:'你好！👋 我是四方阁易爪，你的命理助手。\n\n直接告诉我出生日期+性别即可排盘。',time:Date.now()}],createdAt:Date.now(),updatedAt:Date.now()}}
     try{renderChatList()}catch(e){}
-    try{renderAllMessages()}catch(e){document.getElementById('messages').innerHTML='<div class="msg ai"><div class="avatar">师</div><div><div class="bubble">你好！我是随身大师。</div></div></div>'}
-    try{var r=await fetch('/api/engines');var d=await r.json();document.getElementById('status').textContent=d.engines.length+'引擎在线'}catch(e){var st=document.getElementById('status');if(st){st.textContent='离线';st.classList.add('offline')}}
+    try{renderAllMessages()}catch(e){document.getElementById('messages').innerHTML='<div class="msg ai"><div class="avatar">师</div><div><div class="bubble">你好！我是四方阁易爪。</div></div></div>'}
+    try{var r=await fetch('/api/engines');var d=await r.json();document.getElementById('status').textContent=d.engines.length+'引擎在线'}catch(e){var st=document.getElementById('status');if(st){st.textContent='离线';st.classList.add('offline')};var hw=document.getElementById('hw-dashboard');if(hw)hw.style.display='none'}
     document.getElementById('loading').classList.add('hidden');
     // 初始化墨水波纹效果
     initRippleEffect();
@@ -781,6 +833,15 @@ async function init() {
     fetchHardware();
     setInterval(fetchHardware, 30000);
 }
+
+// ===== 横竖屏检测 =====
+function applyOrientation() {
+  var isLandscape = window.innerWidth > window.innerHeight;
+  document.body.classList.toggle('landscape', isLandscape);
+}
+window.addEventListener('resize', applyOrientation);
+window.addEventListener('orientationchange', function(){setTimeout(applyOrientation,100)});
+document.addEventListener('DOMContentLoaded', applyOrientation);
 
 // ===== 墨水波纹效果 =====
 function initRippleEffect() {
@@ -834,7 +895,7 @@ function renderAllMessages() {
 
     // 如果没有当前对话的消息，用欢迎消息
     const msgs = (chat && chat.messages.length) ? chat.messages : [
-        { role: 'ai', content: '你好！👋 欢迎来到中华传统术数研习平台。我是随身大师，一位专注于传统命理学分析的专业助理。\n\n## 我可以帮您：\n\n| 术数体系 | 适用场景 |\n|----------|----------|\n| **八字命理** | 命局格局、事业财运、婚姻子女、一生运势 |\n| **大六壬** | 具体事项吉凶发展（婚恋、求职、投资、出行） |\n| **奇门遁甲** | 趋吉避凶、方位择吉、时机选择 |\n| **六爻纳甲** | 一事一占、快速断事吉凶 |\n| **紫微斗数** | 十二宫精批、流年限运精确推算 |\n| **七政四余** | 天星推命、星曜格局、本命大限 |\n\n💡 **小提示**：直接告诉我你的出生年月日时和性别，我就可以帮你排盘分析。比如：\n\n> 1996年8月15日 12:56 男，帮我排八字\n\n有什么想了解的，尽管跟我说~', time: Date.now() }
+        { role: 'ai', content: '你好！👋 我是四方阁易爪，你的命理助手。\n\n直接告诉我出生日期+性别即可排盘。', time: Date.now() }
     ];
 
     msgs.forEach(m => {
@@ -1199,7 +1260,7 @@ async function sendMessage(text) {
 
     input.value = '';
     isLoading = true;
-    document.getElementById('sendBtn').disabled = true;
+
     addMessage('user', content);
 
     const aiEl = addMessage('ai', '', true);
@@ -1348,7 +1409,7 @@ async function sendMessage(text) {
     }
     finalizeStreaming(aiEl, fullText);
     isLoading = false;
-    document.getElementById('sendBtn').disabled = false;
+    
 }
 
 // ===== 智能合盘：场景识别自动追加引擎 =====
@@ -2122,7 +2183,7 @@ async function streamChat(userMessage, aiEl) {
     let fullText = '';
 
     var systemPrompt = [
-        '你是「随身大师」AI命理助手，精通八字命理、紫微斗数、大六壬、奇门遁甲、六爻、七政四余、玄空飞星风水、姓名学、号码吉凶等中国传统术数。',
+        '你是「四方阁易爪」AI命理助手，精通八字命理、紫微斗数、大六壬、奇门遁甲、六爻、七政四余、玄空飞星风水、姓名学、号码吉凶等中国传统术数。',
         '你的分析风格：专业、客观、具体、有深度。善用五行生克、十神关系、神煞征象进行交叉验证分析。',
         '',
         '## 🎯 回答格式规范（必须严格遵守）',
@@ -2372,6 +2433,144 @@ function retryLastMessage() {
 // ===== 快捷发送 =====
 function sendQuick(text) { sendMessage(text); }
 
+// ===== 引擎选择器 =====
+var enginePrompts = {
+  bazi: '帮我排八字，',
+  liuren: '帮我排大六壬，',
+  qimen: '帮我排奇门遁甲，',
+  liuyao: '帮我排六爻起卦，',
+  qizheng: '帮我排七政四余，',
+  bazhai: '帮我排八宅飞星，',
+  ziwei: '帮我排紫微斗数，',
+  huangli: '查看今日黄历，',
+  fengshui: '帮我排玄空飞星风水，',
+  xingming: '帮我分析姓名，',
+  haoma: '帮我分析号码吉凶，',
+  reading: '帮我解读命盘，',
+  hehun: '帮我算八字合婚，',
+  yunshi: '今天运势如何，',
+  stock: '查看大盘指数，',
+  security: '搜索安全漏洞，'
+};
+
+// ===== 引擎数据（含描述+分组） =====
+var ENGINES_DATA = [
+  {id:'bazi',icon:'🔮',name:'八字排盘',desc:'子平术·命局格局·事业财运·婚姻子女',group:'排盘'},
+  {id:'liuren',icon:'🌊',name:'大六壬',desc:'婚恋求职·投资出行·吉凶断事',group:'排盘'},
+  {id:'qimen',icon:'🚪',name:'奇门遁甲',desc:'趋吉避凶·择吉时机',group:'排盘'},
+  {id:'liuyao',icon:'🪙',name:'六爻纳甲',desc:'一事一占·快速断吉凶',group:'排盘'},
+  {id:'qizheng',icon:'⭐',name:'七政四余',desc:'天星推命·星曜格局·本命大限',group:'排盘'},
+  {id:'bazhai',icon:'🏠',name:'八宅飞星',desc:'宅命相配·紫白飞星',group:'排盘'},
+  {id:'ziwei',icon:'🧭',name:'紫微斗数',desc:'十二宫精批·流年限运',group:'排盘'},
+  {id:'huangli',icon:'📅',name:'黄历万年历',desc:'择日吉凶·节气宜忌',group:'生活工具'},
+  {id:'fengshui',icon:'🧭',name:'玄空风水',desc:'飞星布局·山向挨星',group:'生活工具'},
+  {id:'xingming',icon:'📛',name:'姓名学起名',desc:'三才五格·五行补益',group:'生活工具'},
+  {id:'haoma',icon:'🔢',name:'号码吉凶',desc:'手机号·车牌号分析',group:'生活工具'},
+  {id:'reading',icon:'📖',name:'命盘解读',desc:'AI深度解读命盘',group:'增强分析'},
+  {id:'hehun',icon:'💕',name:'八字合婚',desc:'双方八字·婚配吉凶',group:'增强分析'},
+  {id:'yunshi',icon:'📊',name:'每日运势',desc:'流日吉凶·宜忌提醒',group:'增强分析'},
+  {id:'stock',icon:'📈',name:'股票行情',desc:'A股实时数据',group:'实用工具'},
+  {id:'security',icon:'🛡️',name:'安全工具',desc:'加密·哈希·编码',group:'实用工具'}
+];
+var selectedEngine = null;
+var activeEngGroup = '排盘';
+
+function toggleEnginePanel() {
+  var ov = document.getElementById('engineSheetOverlay');
+  var tr = document.getElementById('engineTrigger');
+  if (ov.classList.contains('hidden')) {
+    activeEngGroup = '排盘';
+    renderEngineSheet();
+    ov.classList.remove('hidden');
+    tr.classList.add('active');
+  } else {
+    closeEnginePanel();
+  }
+}
+
+function closeEnginePanel() {
+  document.getElementById('engineSheetOverlay').classList.add('hidden');
+  document.getElementById('engineTrigger').classList.remove('active');
+}
+
+function renderEngineSheet() {
+  var groups = {};
+  ENGINES_DATA.forEach(function(e) {
+    if (!groups[e.group]) groups[e.group] = [];
+    groups[e.group].push(e);
+  });
+  var groupNames = Object.keys(groups);
+
+  // 渲染分类标签
+  var tabsHtml = '';
+  groupNames.forEach(function(g) {
+    var cls = g === activeEngGroup ? ' eng-tab active' : 'eng-tab';
+    tabsHtml += '<div class="'+cls+'" onclick="switchEngGroup(\''+g+'\')">'+g+'</div>';
+  });
+  document.getElementById('engTabs').innerHTML = tabsHtml;
+
+  // 渲染当前分组卡片
+  renderEngCards(groups);
+}
+
+function switchEngGroup(name) {
+  activeEngGroup = name;
+  var groups = {};
+  ENGINES_DATA.forEach(function(e) {
+    if (!groups[e.group]) groups[e.group] = [];
+    groups[e.group].push(e);
+  });
+  // 更新标签高亮
+  var tabs = document.getElementById('engTabs').children;
+  for (var i=0;i<tabs.length;i++) {
+    tabs[i].className = tabs[i].textContent === name ? 'eng-tab active' : 'eng-tab';
+  }
+  renderEngCards(groups);
+}
+
+function renderEngCards(groups) {
+  var html = '';
+  html += '<div class="eng-group-title">'+activeEngGroup+'</div>';
+  html += '<div class="eng-cards">';
+  (groups[activeEngGroup] || []).forEach(function(e) {
+    var sel = selectedEngine === e.id ? ' selected' : '';
+    html += '<div class="eng-card'+sel+'" onclick="selectEngine(\''+e.id+'\')">';
+    html += '<span class="eng-icon">'+e.icon+'</span>';
+    html += '<div class="eng-info">';
+    html += '<span class="eng-name">'+e.name+'</span>';
+    html += '<span class="eng-desc">'+e.desc+'</span>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  document.getElementById('engGrid').innerHTML = html;
+}
+
+function selectEngine(id) {
+  selectedEngine = id;
+  var eng = ENGINES_DATA.find(function(e){return e.id===id});
+  if (eng) {
+    document.getElementById('engineTriggerText').textContent = eng.icon + ' ' + eng.name;
+  }
+  closeEnginePanel();
+  var prompt = enginePrompts[id] || '';
+  var inp = document.getElementById('userInput');
+  if (inp && prompt) {
+    inp.value = prompt;
+    inp.focus();
+  }
+}
+
+function goEngine() {
+  if (!selectedEngine) { showToast('请先选择一个命理引擎','warning'); return; }
+  var prompt = enginePrompts[selectedEngine] || '';
+  var inp = document.getElementById('userInput');
+  if (inp) {
+    inp.value = prompt + '2000年1月1日 12:00 男';
+    inp.focus();
+    autoResizeTextarea();
+  }
+}
+
 // ===== 离线解读 =====
 async function fetchOfflineReading(panInfo, panData) {
     var engine = panInfo.types ? panInfo.types[0] : (panInfo.type || 'bazi');
@@ -2506,7 +2705,7 @@ function shareMsg(btn) {
     if (!bubble) return;
     var text = (bubble.innerText || bubble.textContent || '').trim();
     if (navigator.share) {
-        navigator.share({ title: '随身大师', text: text }).catch(function(){});
+        navigator.share({ title: '四方阁易爪', text: text }).catch(function(){});
     } else {
         navigator.clipboard.writeText(text).then(function(){
             btn.textContent = '✅';
@@ -2721,7 +2920,7 @@ function submitHehun() {
     var displayMsg = '💑 八字合婚\n👨 男方: ' + maleDate + ' ' + maleTime + '\n👩 女方: ' + femaleDate + ' ' + femaleTime;
     addMessage('user', displayMsg);
     isLoading = true;
-    document.getElementById('sendBtn').disabled = true;
+
 
     // 构建请求参数
     var panInfo = { type: 'hehun', date: maleDate, time: maleTime, gender: '男' };
@@ -2733,7 +2932,7 @@ function submitHehun() {
     }).catch(function(err) {
         showToast('合婚分析失败: ' + err.message, 'error');
         isLoading = false;
-        document.getElementById('sendBtn').disabled = false;
+        
     });
 }
 
@@ -2758,7 +2957,7 @@ function onPanComplete(panResult) {
     if (!panResult) {
         showToast('排盘无结果', 'error');
         isLoading = false;
-        document.getElementById('sendBtn').disabled = false;
+        
         return;
     }
     var aiEl = addMessage('ai', '', true);
@@ -2774,11 +2973,11 @@ function onPanComplete(panResult) {
     var aiPrompt = '用户请求八字合婚。\n\n以下是排盘结果（DSML格式）：\n' + dsml + '\n\n请基于以上合婚数据进行专业分析。分析内容包括：双方五行互补、生肖配对、纳音相生、日柱相合、综合评分与婚姻建议。';
     streamChat(aiPrompt, aiEl).then(function() {
         isLoading = false;
-        document.getElementById('sendBtn').disabled = false;
+        
     }).catch(function(e) {
         showToast('AI 解读失败: ' + e.message, 'error');
         isLoading = false;
-        document.getElementById('sendBtn').disabled = false;
+        
     });
 }
 
@@ -3497,6 +3696,26 @@ function renderTimeConvert(data) {
 }
 
 // ===== 文件上传处理 =====
+// APK 通过 JS Bridge 调用系统文件选择器
+function pickFile() {
+  if (typeof Android !== 'undefined' && Android.pickFile) {
+    Android.pickFile();
+  } else {
+    // fallback: Web 端就用原生 input
+    document.getElementById('fileInput').click();
+  }
+}
+
+// Android 选完文件后的回调
+window._onFilePicked = function(b64, mime) {
+  var dataUrl = 'data:' + mime + ';base64,' + b64;
+  processImageUpload('image.' + mime.split('/')[1] || 'png', dataUrl);
+};
+
+window._onFileError = function(err) {
+  showToast(err, 'error');
+};
+
 function handleFileUpload(event) {
     var file = event.target.files[0];
     if (!file) return;
@@ -3629,7 +3848,7 @@ function newChat() {
     addMsgToChat('ai', [
         '你好！👋 欢迎来到中华传统数术研习平台。',
         '',
-        '我是随身大师，精通八字命理、大六壬、奇门遁甲、六爻、紫微斗数、七政四余等传统术数。',
+        '我是四方阁易爪，精通八字命理、大六壬、奇门遁甲、六爻、紫微斗数、七政四余等传统术数。',
         '',
         '**我可以帮您：**',
         '',
@@ -3713,64 +3932,13 @@ function cancelStream() {
     }
 }
 
-// ===== 语音输入 (Web Speech API) =====
-var voiceRecognition = null;
+// ===== 语音输入 =====
 function toggleVoice() {
-    var btn = document.getElementById('voiceBtn');
-    var input = document.getElementById('userInput');
-
-    if (voiceRecognition) {
-        voiceRecognition.stop();
-        voiceRecognition = null;
-        if (btn) btn.textContent = '🎤';
-        if (btn) btn.style.background = '';
-        showToast('语音输入已停止', 'info');
-        return;
-    }
-
-    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        showToast('浏览器不支持语音输入，请用 Chrome', 'warning');
-        return;
-    }
-
-    voiceRecognition = new SpeechRecognition();
-    voiceRecognition.lang = 'zh-CN';
-    voiceRecognition.interimResults = true;
-    voiceRecognition.continuous = true;
-
-    if (btn) { btn.textContent = '🔴'; btn.style.background = 'rgba(229,57,53,.15)'; }
-
-    voiceRecognition.onresult = function(event) {
-        var transcript = '';
-        for (var i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-        }
-        if (input) input.value = transcript;
-        autoResizeTextarea();
-    };
-
-    voiceRecognition.onerror = function(event) {
-        showToast('语音错误: ' + event.error, 'error');
-        stopVoice();
-    };
-
-    voiceRecognition.onend = function() {
-        voiceRecognition = null;
-        if (btn) { btn.textContent = '🎤'; btn.style.background = ''; }
-    };
-
-    voiceRecognition.start();
-    showToast('正在聆听...', 'info');
-}
-
-function stopVoice() {
-    if (voiceRecognition) {
-        voiceRecognition.stop();
-        voiceRecognition = null;
-    }
-    var btn = document.getElementById('voiceBtn');
-    if (btn) { btn.textContent = '🎤'; btn.style.background = ''; }
+  var input = document.getElementById('userInput');
+  if (input) {
+    input.focus();
+    showToast('请使用输入法上的语音按钮进行语音输入 🎤', 'info');
+  }
 }
 
 // ===== TTS 朗读 AI 回复 =====
