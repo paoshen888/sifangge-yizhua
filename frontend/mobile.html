@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>四方阁易爪 · 随身大师</title>
+<style>
+:root {
+  --bg: #121212; --surface: #1e1e1e; --surface2: #2a2a2a;
+  --border: #333; --text: #e0e0e0; --text2: #aaa; --text3: #777;
+  --accent: #d4a574; --accent2: #c99555; --accent-bg: rgba(212,165,116,.12);
+  --red: #f87171; --green: #4ade80; --yellow: #facc15;
+  --radius: 10px; --shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC","Microsoft YaHei", sans-serif; font-size:15px; line-height:1.5; overflow-x:hidden; }
+.header { background: var(--surface); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:100; }
+.header-icon { font-size:24px; }
+.header-title { font-size:17px; font-weight:700; color:var(--accent); flex:1; }
+.header-badge { font-size:10px; padding:3px 8px; border-radius:20px; background:var(--accent-bg); color:var(--accent); white-space:nowrap; }
+.header-badge.offline { background:rgba(248,113,113,.15); color:var(--red); }
+.section-title { font-size:12px; color:var(--text3); padding:16px 16px 8px; text-transform:uppercase; letter-spacing:1px; }
+.engine-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:0 16px 16px; }
+.engine-btn { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 8px; text-align:center; cursor:pointer; transition:all .15s; }
+.engine-btn:active { background:var(--surface2); border-color:var(--accent); }
+.engine-btn .eng-icon { font-size:28px; display:block; margin-bottom:4px; }
+.engine-btn .eng-name { font-size:13px; font-weight:600; color:var(--text); }
+.engine-btn .eng-desc { font-size:10px; color:var(--text3); margin-top:2px; }
+.form-panel { background:var(--surface); border-radius:var(--radius); margin:0 16px 16px; padding:16px; display:none; }
+.form-panel.active { display:block; }
+.form-panel h3 { font-size:15px; color:var(--accent); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.form-row { display:flex; gap:8px; margin-bottom:10px; }
+.form-row label { font-size:12px; color:var(--text2); min-width:40px; line-height:36px; }
+.form-row input, .form-row select { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:8px 10px; color:var(--text); font-size:14px; }
+.form-row input:focus, .form-row select:focus { border-color:var(--accent); outline:none; }
+.btn-primary { display:block; width:100%; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#000; border:none; border-radius:var(--radius); padding:12px; font-size:15px; font-weight:700; cursor:pointer; margin-top:8px; }
+.btn-primary:active { opacity:.8; }
+.btn-close { background:var(--surface2); border:1px solid var(--border); color:var(--text2); border-radius:6px; padding:6px 14px; font-size:12px; cursor:pointer; }
+.result-panel { margin:0 16px 16px; display:none; }
+.result-panel.active { display:block; }
+.result-card { background:var(--surface); border-radius:var(--radius); padding:16px; border-left:3px solid var(--accent); }
+.result-card h3 { font-size:15px; color:var(--accent); margin-bottom:12px; }
+.result-content { font-size:13px; color:var(--text2); line-height:1.7; max-height:60vh; overflow-y:auto; }
+.result-content p { margin:6px 0; }
+.result-content h4 { font-size:14px; color:var(--text); margin:12px 0 6px; }
+.result-content table { width:100%; border-collapse:collapse; margin:8px 0; font-size:12px; }
+.result-content table td, .result-content table th { border:1px solid var(--border); padding:6px 8px; text-align:center; }
+.result-content table th { background:var(--surface2); }
+.result-loading { text-align:center; padding:40px 0; color:var(--text3); }
+.result-error { color:var(--red); }
+.result-mode-tag { display:inline-block; font-size:10px; padding:2px 8px; border-radius:10px; margin-bottom:8px; }
+.result-mode-tag.ai { background:rgba(74,222,128,.15); color:var(--green); }
+.result-mode-tag.offline { background:rgba(248,113,113,.15); color:var(--red); }
+.footer-hint { text-align:center; color:var(--text3); font-size:11px; padding:8px 16px 24px; }
+.result-content::-webkit-scrollbar { width:4px; }
+.result-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.api-modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.7); z-index:200; display:flex; align-items:center; justify-content:center; display:none; }
+.api-modal.active { display:flex; }
+.api-modal-inner { background:var(--surface); border-radius:var(--radius); padding:20px; width:calc(100% - 48px); max-width:360px; }
+.api-modal-inner h3 { font-size:15px; color:var(--accent); margin-bottom:12px; }
+.api-modal-inner input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:10px; color:var(--text); font-size:13px; margin-bottom:12px; }
+.api-modal-inner .btn-row { display:flex; gap:8px; }
+.api-modal-inner .btn-row button { flex:1; padding:10px; border-radius:6px; font-size:14px; cursor:pointer; border:none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">🏯</span>
+  <span class="header-title">四方阁易爪</span>
+  <span class="header-badge" id="netBadge">✅ 在线</span>
+  <span style="cursor:pointer;padding:6px;" onclick="toggleApiModal()">⚙️</span>
+</div>
+
+<div class="api-modal" id="apiModal">
+  <div class="api-modal-inner">
+    <h3>⚙️ AI 设置</h3>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">硅基流动 API Key（用于 AI 解读）</div>
+    <input type="password" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxx">
+    <div class="btn-row">
+      <button onclick="saveApiKey()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-weight:700;">保存</button>
+      <button onclick="toggleApiModal()" style="background:var(--surface2);color:var(--text2);">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="section-title">🔮 术数排盘</div>
+<div class="engine-grid" id="panGrid"></div>
+<div class="section-title">📅 生活工具</div>
+<div class="engine-grid" id="lifeGrid"></div>
+
+<div class="form-panel" id="formPanel">
+  <h3 id="formTitle">排盘</h3>
+  <div id="formContent"></div>
+  <div style="display:flex;gap:8px;margin-top:8px;">
+    <button class="btn-primary" onclick="submitPan()">🔮 开始排盘</button>
+    <button class="btn-close" onclick="closeForm()">取消</button>
+  </div>
+</div>
+
+<div class="result-panel" id="resultPanel">
+  <div class="result-card">
+    <h3 id="resultTitle">排盘结果</h3>
+    <div class="result-content" id="resultContent"></div>
+  </div>
+</div>
+
+<div class="footer-hint">18 引擎 · 全本地计算 · ¥0 · 离线可用</div>
+<script>
+var ENGINES = [
+  {id:"bazi",name:"八字排盘",icon:"🔭",desc:"四柱十神",group:"pan",fields:[
+    {id:"date",label:"日期",type:"date",def:"2026-08-03"},
+    {id:"time",label:"时间",type:"time",def:"16:00"},
+    {id:"gender",label:"性别",type:"select",opts:[{v:"男"},{v:"女"}]}
+  ]},
+  {id:"ziwei",name:"紫微斗数",icon:"🌟",desc:"十二宫星曜",group:"pan",fields:[
+    {id:"date",label:"日期",type:"date",def:"2026-08-03"},
+    {id:"time",label:"时间",type:"time",def:"16:00"},
+    {id:"gender",label:"性别",type:"select",opts:[{v:"男"},{v:"女"}]}
+  ]},
+  {id:"liuren",name:"大六壬",icon:"🌾",desc:"天盘四课三传",group:"pan",fields:[
+    {id:"date",label:"日期",type:"date",def:"2026-08-03"},
+    {id:"time",label:"时间",type:"time",def:"16:00"}
+  ]},
+  {id:"qimen",name:"奇门遁甲",icon:"🎆",desc:"八门九星",group:"pan",fields:[
+    {id:"date",label:"日期",type:"date",def:"2026-08-03"},
+    {id:"time",label:"时间",type:"time",def:"16:00"}
+  ]},
+  {id:"liuyao",name:"六爻纳甲",icon:"🪙",desc:"六亲六神",group:"pan",fields:[
+    {id:"date",label:"日期",type:"date",def:"2026-08-03"},
+    {id:"time",label:"时间",type:"time",def:"16:00"}
+  ]},
+  {id:"qizheng",name:"七政四余",icon:"🪐",desc:"星盘命度",group:"pan",fields:[
+    {id:"date",label:"日期",type:"date",def:"2026-08-03"},
+    {id:"time",label:"时间",type:"time",def:"16:00"},
+    {id:"gender",label:"性别",type:"select",opts:[{v:"男"},{v:"女"}]}
+  ]},
+  {id:"bazhai",name:"八宅紫白",icon:"🏠",desc:"飞星八宅",group:"life",fields:[
+    {id:"year",label:"年份",type:"number",def:"2026"},
+    {id:"direction",label:"朝向",type:"select",opts:[
+      {v:"北"},{v:"东北"},{v:"东"},{v:"东南"},{v:"南"},{v:"西南"},{v:"西"},{v:"西北"}
+    ]}
+  ]},
+  {id:"huangli",name:"黄历万年历",icon:"📅",desc:"宜忌冲煞",group:"life",fields:[
+    {id:"date",label:"日期",type:"date",def:"2026-08-03"}
+  ]},
+  {id:"fengshui",name:"玄空风水",icon:"🧭",desc:"飞星排盘",group:"life",fields:[
+    {id:"year",label:"年份",type:"number",def:"2026"},
+    {id:"direction",label:"朝向",type:"select",opts:[
+      {v:"北"},{v:"东北"},{v:"东"},{v:"东南"},{v:"南"},{v:"西南"},{v:"西"},{v:"西北"}
+    ]}
+  ]},
+  {id:"xingming",name:"姓名学",icon:"🖊️",desc:"三才五格",group:"life",fields:[
+    {id:"name",label:"姓名",type:"text",def:"张三"},
+    {id:"gender",label:"性别",type:"select",opts:[{v:"男"},{v:"女"}]}
+  ]},
+  {id:"hehun",name:"八字合婚",icon:"💑",desc:"合婚配对",group:"life",fields:[
+    {id:"date1",label:"男方日期",type:"date",def:"1990-01-01"},
+    {id:"time1",label:"男方时间",type:"time",def:"12:00"},
+    {id:"date2",label:"女方日期",type:"date",def:"1992-01-01"},
+    {id:"time2",label:"女方时间",type:"time",def:"12:00"}
+  ]},
+  {id:"haoma",name:"号码吉凶",icon:"🔢",desc:"手机号分析",group:"life",fields:[
+    {id:"number",label:"号码",type:"text",def:"13800138000"}
+  ]},
+  {id:"yunshi",name:"每日运势",icon:"🌤️",desc:"流日分析",group:"life",fields:[
+    {id:"date",label:"日期",type:"date",def:"2026-08-03"}
+  ]}
+];
+
+var currentEngine = null;
+var SILICONFLOW_KEY = localStorage.getItem('sf_key') || '';
+var isOnline = navigator.onLine;
+
+function updateNetStatus() {
+  isOnline = navigator.onLine;
+  var badge = document.getElementById('netBadge');
+  if (isOnline) { badge.textContent = '✅ 在线'; badge.className = 'header-badge'; }
+  else { badge.textContent = '🔴 离线'; badge.className = 'header-badge offline'; }
+}
+window.addEventListener('online', updateNetStatus);
+window.addEventListener('offline', updateNetStatus);
+updateNetStatus();
+
+function renderEngineGrid() {
+  document.getElementById('panGrid').innerHTML = ENGINES
+    .filter(function(e){return e.group==='pan'})
+    .map(function(e){return '<div class="engine-btn" onclick="openForm(\''+e.id+'\')"><span class="eng-icon">'+e.icon+'</span><span class="eng-name">'+e.name+'</span><span class="eng-desc">'+e.desc+'</span></div>';}).join('');
+  document.getElementById('lifeGrid').innerHTML = ENGINES
+    .filter(function(e){return e.group==='life'})
+    .map(function(e){return '<div class="engine-btn" onclick="openForm(\''+e.id+'\')"><span class="eng-icon">'+e.icon+'</span><span class="eng-name">'+e.name+'</span><span class="eng-desc">'+e.desc+'</span></div>';}).join('');
+}
+renderEngineGrid();
+
+function openForm(engineId) {
+  var eng = ENGINES.find(function(e){return e.id===engineId;});
+  if (!eng) return;
+  currentEngine = eng;
+  document.getElementById('formTitle').innerHTML = eng.icon + ' ' + eng.name;
+  var fc = document.getElementById('formContent');
+  fc.innerHTML = eng.fields.map(function(f){
+    if (f.type === 'select') {
+      return '<div class="form-row"><label>'+f.label+'</label><select id="field_'+f.id+'">'
+        + f.opts.map(function(o){return '<option value="'+o.v+'">'+o.v+'</option>';}).join('')
+        + '</select></div>';
+    }
+    return '<div class="form-row"><label>'+f.label+'</label><input type="'+f.type+'" id="field_'+f.id+'" value="'+f.def+'"></div>';
+  }).join('');
+  document.getElementById('formPanel').classList.add('active');
+  document.getElementById('resultPanel').classList.remove('active');
+}
+
+function closeForm() {
+  document.getElementById('formPanel').classList.remove('active');
+  currentEngine = null;
+}
+
+function collectFormData() {
+  if (!currentEngine) return {};
+  var data = {};
+  currentEngine.fields.forEach(function(f){
+    var el = document.getElementById('field_' + f.id);
+    if (el) data[f.id] = el.value;
+  });
+  return data;
+}
+
+async function submitPan() {
+  if (!currentEngine) return;
+  var data = collectFormData();
+  var content = document.getElementById('resultContent');
+  var panel = document.getElementById('resultPanel');
+  var title = document.getElementById('resultTitle');
+  panel.classList.add('active');
+  title.innerHTML = currentEngine.icon + ' ' + currentEngine.name;
+  content.innerHTML = '<div class="result-loading">🔮 正在排盘中...</div>';
+  
+  try {
+    var result = await tryLocalApi(currentEngine.id, data);
+    if (result) { renderResult(currentEngine.id, result, 'local'); return; }
+  } catch(e) { console.log('Local API failed:', e.message); }
+  
+  var offlineResult = generateOfflineResult(currentEngine.id, data);
+  renderResult(currentEngine.id, offlineResult, 'offline');
+  
+  if (isOnline && SILICONFLOW_KEY) {
+    content.innerHTML += '<div class="result-loading" style="margin-top:12px;">🤖 AI 解读中...</div>';
+    try {
+      var aiResult = await tryAIInterpretation(currentEngine.id, offlineResult);
+      if (aiResult) {
+        content.innerHTML += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);"><span class="result-mode-tag ai">🤖 AI 解读</span><div style="margin-top:8px;">'+formatAIResult(aiResult)+'</div></div>';
+      }
+    } catch(e) { console.log('AI failed:', e.message); }
+  }
+}
+
+async function tryLocalApi(engineId, data) {
+  var params = buildPanParams(engineId, data);
+  var baseUrls = ['http://localhost:8899', 'http://127.0.0.1:8899', 'http://192.168.2.107:8899'];
+  for (var i = 0; i < baseUrls.length; i++) {
+    try {
+      var controller = new AbortController();
+      var tid = setTimeout(function(){controller.abort();}, 3000);
+      var res = await fetch(baseUrls[i] + '/api/pan?' + params, {signal: controller.signal});
+      clearTimeout(tid);
+      if (res.ok) {
+        var json = await res.json();
+        return json.result || json;
+      }
+    } catch(e) {}
+  }
+  return null;
+}
+
+function generateOfflineResult(engineId, data) {
+  if (engineId === 'bazi') return generateBaziOffline(data);
+  if (engineId === 'ziwei') return generateZiweiOffline(data);
+  return {engine: engineId, data: data, mode: 'offline', raw: engineId + ' 离线结果（完整引擎在电脑端运行）'};
+}
+
+function generateBaziOffline(data) {
+  var dateStr = data.date || '2026-08-03';
+  var timeStr = data.time || '16:00';
+  var gender = data.gender || '男';
+  var parts = dateStr.split('-');
+  var y = parseInt(parts[0]), m = parseInt(parts[1]), d = parseInt(parts[2]);
+  var timeParts = timeStr.split(':');
+  var h = parseInt(timeParts[0]), mn = parseInt(timeParts[1]||'0');
+  
+  var tianGan = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  var diZhi = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  
+  var yearGan = tianGan[(y - 4) % 10];
+  var yearZhi = diZhi[(y - 4) % 12];
+  while ((y-4)%10 < 0) { var yearGan = tianGan[(y-4)%10+10]; }
+  while ((y-4)%12 < 0) { var yearZhi = diZhi[(y-4)%12+12]; }
+  var yearStr = yearGan + yearZhi;
+  
+  var monthGanIdx = (((y - 4) % 10 * 2 + (m - 1)) % 10 + 10) % 10;
+  var monthZhiIdx = ((m + 1) % 12 + 12) % 12;
+  var monthStr = tianGan[monthGanIdx] + diZhi[monthZhiIdx];
+  
+  var daysInMonth = [0,31,28,31,30,31,30,31,31,30,31,30,31];
+  if ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0) daysInMonth[2] = 29;
+  var dayCount = 0;
+  for (var i = 1; i < m; i++) dayCount += daysInMonth[i];
+  dayCount += d;
+  
+  var baseYear = 2024;
+  var totalDays = 0;
+  if (y >= baseYear) {
+    for (var i = baseYear; i < y; i++) {
+      totalDays += ((i % 4 === 0 && i % 100 !== 0) || i % 400 === 0) ? 366 : 365;
+    }
+    totalDays += dayCount - 1;
+  } else {
+    for (var i = y; i < baseYear; i++) {
+      totalDays -= ((i % 4 === 0 && i % 100 !== 0) || i % 400 === 0) ? 366 : 365;
+    }
+    totalDays += dayCount - 1;
+  }
+  
+  var dayGanIdx = ((totalDays % 10) + 10) % 10;
+  var dayZhiIdx = ((totalDays % 12) + 12) % 12;
+  var dayStr = tianGan[dayGanIdx] + diZhi[dayZhiIdx];
+  var riGan = tianGan[dayGanIdx];
+  
+  var hourZhiIdx = Math.floor((h + 1) / 2) % 12;
+  var riGanStartMap = {'甲':0,'乙':2,'丙':4,'丁':6,'戊':0,'己':2,'庚':4,'辛':6,'壬':8,'癸':8};
+  var hourGanIdx = (riGanStartMap[riGan] + Math.floor((h + 1) / 2)) % 10;
+  var hourStr = tianGan[hourGanIdx] + diZhi[hourZhiIdx];
+  
+  var wuXingMap = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+  var riGanWx = wuXingMap[riGan];
+  
+  var naYinMap = {'甲子':'海中金','乙丑':'海中金','丙寅':'炉中火','丁卯':'炉中火','戊辰':'大林木','己巳':'大林木','庚午':'路旁土','辛未':'路旁土','壬申':'剑锋金','癸酉':'剑锋金','甲戌':'山头火','乙亥':'山头火','丙子':'涧下水','丁丑':'涧下水','戊寅':'城头土','己卯':'城头土','庚辰':'白蜡金','辛巳':'白蜡金','壬午':'杨柳木','癸未':'杨柳木','甲申':'泉中水','乙酉':'泉中水','丙戌':'屋上土','丁亥':'屋上土','戊子':'霹雳火','己丑':'霹雳火','庚寅':'松柏木','辛卯':'松柏木','壬辰':'长流水','癸巳':'长流水','甲午':'沙中金','乙未':'沙中金','丙申':'山下火','丁酉':'山下火','戊戌':'平地木','己亥':'平地木','庚子':'壁上土','辛丑':'壁上土','壬寅':'金箔金','癸卯':'金箔金','甲辰':'覆灯火','乙巳':'覆灯火','丙午':'天河水','丁未':'天河水','戊申':'大驿土','己酉':'大驿土','庚戌':'钗钏金','辛亥':'钗钏金','壬子':'桑柘木','癸丑':'桑柘木','甲寅':'大溪水','乙卯':'大溪水','丙辰':'沙中土','丁巳':'沙中土','戊午':'天上火','己未':'天上火','庚申':'石榴木','辛酉':'石榴木','壬戌':'大海水','癸亥':'大海水'};
+  
+  var shiShenMap = {
+    '甲':{'甲':'比肩','乙':'劫财','丙':'食神','丁':'伤官','戊':'偏财','己':'正财','庚':'七杀','辛':'正官','壬':'偏印','癸':'正印'},
+    '乙':{'甲':'劫财','乙':'比肩','丙':'伤官','丁':'食神','戊':'正财','己':'偏财','庚':'正官','辛':'七杀','壬':'正印','癸':'偏印'},
+    '丙':{'甲':'偏印','乙':'正印','丙':'比肩','丁':'劫财','戊':'食神','己':'伤官','庚':'偏财','辛':'正财','壬':'七杀','癸':'正官'},
+    '丁':{'甲':'正印','乙':'偏印','丙':'劫财','丁':'比肩','戊':'伤官','己':'食神','庚':'正财','辛':'偏财','壬':'正官','癸':'七杀'},
+    '戊':{'甲':'七杀','乙':'正官','丙':'偏印','丁':'正印','戊':'比肩','己':'劫财','庚':'食神','辛':'伤官','壬':'偏财','癸':'正财'},
+    '己':{'甲':'正官','乙':'七杀','丙':'正印','丁':'偏印','戊':'劫财','己':'比肩','庚':'伤官','辛':'食神','壬':'正财','癸':'偏财'},
+    '庚':{'甲':'偏财','乙':'正财','丙':'七杀','丁':'正官','戊':'偏印','己':'正印','庚':'比肩','辛':'劫财','壬':'食神','癸':'伤官'},
+    '辛':{'甲':'正财','乙':'偏财','丙':'正官','丁':'七杀','戊':'正印','己':'偏印','庚':'劫财','辛':'比肩','壬':'伤官','癸':'食神'},
+    '壬':{'甲':'食神','乙':'伤官','丙':'偏财','丁':'正财','戊':'七杀','己':'正官','庚':'偏印','辛':'正印','壬':'比肩','癸':'劫财'},
+    '癸':{'甲':'伤官','乙':'食神','丙':'正财','丁':'偏财','戊':'正官','己':'七杀','庚':'正印','辛':'偏印','壬':'劫财','癸':'比肩'}
+  };
+  
+  var pillars = [yearStr, monthStr, dayStr, hourStr];
+  var wxCounts = calcWuXing(pillars);
+  var daYunAge = Math.abs((dayGanIdx % 2 === 0) ? 6 : 5);
+  
+  return {
+    engine: 'bazi', mode: 'offline_js',
+    pillars: {'年柱': yearStr, '月柱': monthStr, '日柱': dayStr, '时柱': hourStr},
+    ri_gan: riGan, ri_gan_wuxing: riGanWx,
+    na_yin: {'年':naYinMap[yearStr]||'', '月':naYinMap[monthStr]||'', '日':naYinMap[dayStr]||'', '时':naYinMap[hourStr]||''},
+    shi_shen: {
+      '年干': shiShenMap[riGan][yearGan],
+      '月干': shiShenMap[riGan][tianGan[monthGanIdx]],
+      '日干': '日主',
+      '时干': shiShenMap[riGan][tianGan[hourGanIdx]]
+    },
+    wu_xing_counts: wxCounts,
+    qi_yun: {'年': daYunAge, '月': 0, '日': 0},
+    gender: gender
+  };
+}
+
+function calcWuXing(pillars) {
+  var wxMap = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水','子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水'};
+  var counts = {'金':0,'木':0,'水':0,'火':0,'土':0};
+  pillars.forEach(function(p){
+    if (p.length >= 2) {
+      counts[wxMap[p[0]]] = (counts[wxMap[p[0]]]||0) + 1;
+      counts[wxMap[p[1]]] = (counts[wxMap[p[1]]]||0) + 1;
+    }
+  });
+  return counts;
+}
+
+function generateZiweiOffline(data) {
+  return {engine: 'ziwei', mode: 'offline_js', note: '紫微斗数需完整 Python 引擎计算。当前为离线占位结果。', input: data};
+}
+
+async function tryAIInterpretation(engineId, panResult) {
+  if (!SILICONFLOW_KEY) return null;
+  var sys = '你是命理大师，请根据排盘数据给出专业解读。';
+  var msg = '';
+  if (engineId === 'bazi') {
+    var p = panResult;
+    var pInfo = '四柱：' + ((p.pillars||{}).年柱||'') + ' ' + ((p.pillars||{}).月柱||'') + ' ' + ((p.pillars||{}).日柱||'') + ' ' + ((p.pillars||{}).时柱||'');
+    pInfo += '\n日主：' + p.ri_gan + ' 性别：' + (p.gender||'');
+    pInfo += '\n五行：' + JSON.stringify(p.wu_xing_counts||{});
+    pInfo += '\n十神：' + JSON.stringify(p.shi_shen||{});
+    pInfo += '\n起运：' + (((p.qi_yun||{}).年||'?')) + '岁';
+    msg = '请解读以下八字排盘：\n' + pInfo + '\n请按结构：1命局总览 2五行旺衰 3格局层次 4关键特征 5大运走势';
+  } else {
+    msg = '请解读以下排盘：\n' + JSON.stringify(panResult);
+  }
+  var res = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer '+SILICONFLOW_KEY},
+    body: JSON.stringify({model:'deepseek-ai/DeepSeek-V3', messages:[{role:'system',content:sys},{role:'user',content:msg}], max_tokens:2048, temperature:0.7})
+  });
+  if (!res.ok) throw new Error('AI error '+res.status);
+  var j = await res.json();
+  return (j.choices||[])[0] ? j.choices[0].message.content : null;
+}
+
+function renderResult(engineId, result, mode) {
+  var content = document.getElementById('resultContent');
+  var tag = '';
+  if (mode === 'local') tag = '<span class="result-mode-tag ai">🖥️ 本地引擎</span>';
+  else if (mode === 'offline') tag = '<span class="result-mode-tag offline">📴 离线模式</span>';
+  var html = tag;
+  if (engineId === 'bazi' && result.pillars) {
+    html += renderBazi(result);
+  } else if (result.text || result.result || result.raw) {
+    var text = result.text || result.result || result.raw;
+    if (typeof text === 'string') html += '<div style="white-space:pre-wrap;margin-top:8px;">'+escHtml(text)+'</div>';
+    else html += '<pre style="font-size:12px;margin-top:8px;">'+JSON.stringify(text,null,2)+'</pre>';
+  } else {
+    html += '<pre style="font-size:12px;margin-top:8px;">'+JSON.stringify(result,null,2)+'</pre>';
+  }
+  content.innerHTML = html;
+}
+
+function renderBazi(r) {
+  var h = '<div style="margin-top:8px;">';
+  h += '<table><tr><th></th><th>年柱</th><th>月柱</th><th>日柱</th><th>时柱</th></tr>';
+  h += '<tr><td><b>干支</b></td><td>'+(r.pillars.年柱||'')+'</td><td>'+(r.pillars.月柱||'')+'</td><td>'+(r.pillars.日柱||'')+'</td><td>'+(r.pillars.时柱||'')+'</td></tr>';
+  if (r.na_yin) {
+    h += '<tr><td><b>纳音</b></td><td>'+(r.na_yin.年||'')+'</td><td>'+(r.na_yin.月||'')+'</td><td>'+(r.na_yin.日||'')+'</td><td>'+(r.na_yin.时||'')+'</td></tr>';
+  }
+  if (r.shi_shen) {
+    h += '<tr><td><b>十神</b></td><td>'+(r.shi_shen.年干||'')+'</td><td>'+(r.shi_shen.月干||'')+'</td><td>'+(r.shi_shen.日干||'日主')+'</td><td>'+(r.shi_shen.时干||'')+'</td></tr>';
+  }
+  h += '</table>';
+  h += '<p><b>日主：</b>'+r.ri_gan+'（'+(r.ri_gan_wuxing||'')+'） | <b>性别：</b>'+(r.gender||'未知')+'</p>';
+  if (r.wu_xing_counts) {
+    var wx = r.wu_xing_counts;
+    var icons = {'金':'⚪','木':'🟢','水':'🔵','火':'🔴','土':'🟤'};
+    h += '<p><b>五行分布：</b>';
+    ['金','木','水','火','土'].forEach(function(w){
+      var c = wx[w] || 0;
+      var color = c===0?'var(--red)':(c>=4?'var(--yellow)':'');
+      h += '<span style="color:'+color+';margin:0 4px;">'+icons[w]+w+':'+c+'</span>';
+    });
+    h += '</p>';
+  }
+  if (r.qi_yun) h += '<p><b>起运年龄：</b>'+(r.qi_yun.年||'?')+'岁</p>';
+  h += '</div>';
+  return h;
+}
+
+function formatAIResult(text) {
+  if (!text) return '';
+  return text.replace(/### (.+)/g,'<h4>$1</h4>').replace(/## (.+)/g,'<h4>$1</h4>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>').replace(/- (.+)/g,'· $1');
+}
+
+function buildPanParams(engineId, data) {
+  var params = new URLSearchParams();
+  params.set('engine', engineId);
+  if (data.date) { params.set('date', data.date); params.set('time', data.time || '12:00'); }
+  if (data.gender) params.set('gender', data.gender);
+  if (data.year) params.set('year', data.year);
+  if (data.direction) params.set('direction', data.direction);
+  if (data.name) params.set('name', data.name);
+  if (data.number) params.set('number', data.number);
+  return params.toString();
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleApiModal() {
+  var modal = document.getElementById('apiModal');
+  modal.classList.toggle('active');
+  if (modal.classList.contains('active')) {
+    document.getElementById('apiKeyInput').value = SILICONFLOW_KEY;
+  }
+}
+
+function saveApiKey() {
+  SILICONFLOW_KEY = document.getElementById('apiKeyInput').value.trim();
+  localStorage.setItem('sf_key', SILICONFLOW_KEY);
+  toggleApiModal();
+  if (SILICONFLOW_KEY) document.getElementById('netBadge').textContent = '✅ AI就绪';
+}
+
+if (SILICONFLOW_KEY) document.getElementById('netBadge').textContent = '✅ AI就绪';
+</script>
+</body>
+</html>
