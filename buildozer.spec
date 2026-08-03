@@ -25,8 +25,8 @@ android.landscape_mode = True
 android.portrait_mode = True
 
 # Android 最低 API
-android.minapi = 21
-android.api = 27
+android.minapi = 24
+android.api = 33
 
 # Android 架构
 android.arch = armeabi-v7a, arm64-v8a
@@ -50,7 +50,7 @@ android.logcat_filters = *:S python:D
 android.release_artifact = apk
 
 # 跳过 Android 检查
-p4a.branch = v2024.01.21
+p4a.branch = develop
 
 # 超时
 buildozer.build_timeout = 3600
@@ -59,4 +59,4 @@ buildozer.build_timeout = 3600
 log_level = 2
 warn_on_root = 1
 
-android.ndk = 25.2.9519653
+
