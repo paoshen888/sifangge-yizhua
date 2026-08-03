@@ -14,7 +14,7 @@ source.dir = .
 main = app.py
 
 # 依赖
-requirements = python3,kivy,lunar_python,fastapi,uvicorn,httpx,pydantic,psutil
+requirements = python3,kivy,fastapi,uvicorn,httpx,pydantic,psutil
 
 # Android 权限
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE,FOREGROUND_SERVICE
@@ -47,11 +47,10 @@ android.splash_color = #5B68AA
 android.logcat_filters = *:S python:D
 
 # 打包
-android.release_artifact = aab
+android.release_artifact = apk
 
 # 跳过 Android 检查
 p4a.branch = v2024.01.21
-p4a.local_recipes = ./p4a/recipes
 
 # 超时
 buildozer.build_timeout = 3600
