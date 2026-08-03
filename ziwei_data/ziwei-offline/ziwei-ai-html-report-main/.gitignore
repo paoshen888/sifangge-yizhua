@@ -1,0 +1,25 @@
+.DS_Store
+node_modules/
+output/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+dist/
+build/
+
+# Local generation outputs
+work/
+
+# Presentation build/cache artifacts
+ppt/
+ppt/**/node_modules/
+ppt/**/package-lock.json
+ppt/**/_qa-*.png
+ppt/**/images/*-capture.html
+
+# Logs and local env
+*.log
+.env
+.env.*
+!.env.example

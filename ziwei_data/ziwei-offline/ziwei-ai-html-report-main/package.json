@@ -1,0 +1,9 @@
+{
+  "name": "ziwei-ai-html-report-chart",
+  "private": true,
+  "description": "iztro 命盘导出（与本仓库 app 紫微配置对齐），供 skill 与 HTML 报告生成使用",
+  "version": "1.0.0",
+  "dependencies": {
+    "iztro": "^2.5.4"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "广东省佛山市顺德区": { "longitude": 113.2932, "latitude": 22.8054 },
+  "广东省广州市": { "longitude": 113.2644, "latitude": 23.1291 },
+  "北京市": { "longitude": 116.4074, "latitude": 39.9042 },
+  "上海市": { "longitude": 121.4737, "latitude": 31.2304 },
+  "深圳市": { "longitude": 114.0579, "latitude": 22.5431 },
+  "杭州市": { "longitude": 120.1551, "latitude": 30.2741 },
+  "成都市": { "longitude": 104.0665, "latitude": 30.5728 },
+  "重庆市": { "longitude": 106.5516, "latitude": 29.5630 },
+  "西安市": { "longitude": 108.9398, "latitude": 34.3416 },
+  "兰州市": { "longitude": 103.8343, "latitude": 36.0611 },
+  "乌鲁木齐市": { "longitude": 87.6168, "latitude": 43.8256 },
+  "喀什市": { "longitude": 75.9898, "latitude": 39.4704 },
+  "拉萨市": { "longitude": 91.1322, "latitude": 29.6604 },
+  "昆明市": { "longitude": 102.8329, "latitude": 24.8801 },
+  "海口市": { "longitude": 110.3312, "latitude": 20.0311 },
+  "哈尔滨市": { "longitude": 126.6425, "latitude": 45.7560 },
+  "长春市": { "longitude": 125.3235, "latitude": 43.8171 },
+  "呼和浩特市": { "longitude": 111.7492, "latitude": 40.8426 },
+  "南京市": { "longitude": 118.7969, "latitude": 32.0603 },
+  "厦门市": { "longitude": 118.0894, "latitude": 24.4798 },
+  "大连市": { "longitude": 121.6147, "latitude": 38.9140 }
+}

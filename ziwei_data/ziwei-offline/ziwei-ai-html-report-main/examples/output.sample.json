@@ -1,0 +1,26 @@
+{
+  "chart": {
+    "engine": "ziwei-ai-html-report offline-python",
+    "birth": {
+      "solar": "1996-01-06",
+      "localTime": "11:30",
+      "birthplace": "广东省佛山市顺德区",
+      "coordinates": {
+        "longitude": 113.2932,
+        "latitude": 22.8054,
+        "source": "offline"
+      },
+      "trueSolar": {
+        "enabled": true,
+        "applied": true,
+        "time": "1996-01-06 11:03",
+        "totalCorrectionMinutes": -27.0
+      }
+    },
+    "fiveElementsClass": "木三局"
+  },
+  "natalContext": "【命盘完整信息】\\n...",
+  "yearlyContext": "【流年盘信息】\\n...",
+  "klineContext": "请根据以下命盘信息，生成 1-100 岁的人生 K 线数据。"
+}
+

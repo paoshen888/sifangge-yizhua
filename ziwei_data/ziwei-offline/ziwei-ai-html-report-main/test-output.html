@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>紫微斗数 · AI 命盘报告</title>
+  <style>
+    :root {
+      --bg: #1a1714;
+      --panel: #242019;
+      --text: #e8e2d9;
+      --muted: #9a9288;
+      --gold: #c9a962;
+      --gold-dim: #8a7a54;
+      --bull: #6b9e78;
+      --bear: #a65d5d;
+      --wick: #c4b89f;
+      --border: rgba(201, 169, 98, 0.22);
+      --radius: 12px;
+      --font-serif: Georgia, "Noto Serif SC", serif;
+      --font-sans: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(160deg, #141210 0%, var(--bg) 40%, #161310 100%);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+    header.report-header {
+      text-align: center;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+    header.report-header h1 {
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: 1.75rem;
+      color: var(--gold);
+      margin: 0 0 0.5rem;
+      letter-spacing: 0.06em;
+    }
+    header.report-header .subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.65rem;
+      margin-top: 1rem;
+      text-align: left;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .meta-grid strong { color: var(--text); font-weight: 500; }
+
+    .palace-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    .palace-cell {
+      min-height: 120px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 0.45rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .palace-cell.life { box-shadow: inset 0 0 0 1px rgba(201, 169, 98, 0.65); }
+    .palace-cell.body { box-shadow: inset 0 0 0 1px rgba(107, 158, 120, 0.55); }
+    .palace-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+    .palace-name { color: var(--text); font-size: 0.8rem; font-weight: 600; }
+    .palace-stars { font-size: 0.78rem; color: var(--text); }
+    .palace-stars small { color: var(--muted); }
+    .center-cell {
+      grid-column: 2 / span 2;
+      grid-row: 2 / span 2;
+      min-height: 248px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.22);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0.7rem;
+    }
+    .center-cell h3 {
+      margin: 0 0 0.4rem;
+      font-family: var(--font-serif);
+      font-size: 1.02rem;
+      color: var(--gold);
+    }
+    .center-cell p {
+      margin: 0.12rem 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .mutagen { color: var(--gold); font-size: 0.72rem; }
+    .borrow-hint { color: var(--gold-dim); font-size: 0.72rem; margin-right: 0.25rem; }
+
+    section.report-section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.35rem;
+      margin-bottom: 1.5rem;
+    }
+    section.report-section h2 {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      color: var(--gold);
+      margin: 0 0 1rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .prose :where(h3) {
+      font-size: 1.05rem;
+      color: var(--text);
+      margin: 1.1rem 0 0.4rem;
+    }
+    .prose :where(p) { margin: 0.5rem 0; color: var(--text); }
+    .prose :where(ul) {
+      margin: 0.4rem 0 0.6rem;
+      padding-left: 1.2rem;
+    }
+    .prose :where(li) { margin: 0.25rem 0; }
+    .prose blockquote {
+      margin: 0.8rem 0;
+      padding: 0.5rem 0 0.5rem 1rem;
+      border-left: 3px solid var(--gold-dim);
+      color: var(--muted);
+      font-style: italic;
+    }
+    .placeholder {
+      color: var(--muted);
+      font-style: italic;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 0.85rem;
+    }
+
+    .kline-wrap {
+      margin-top: 0.75rem;
+    }
+    canvas#kline-canvas {
+      display: block;
+      width: 100%;
+      height: 280px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.35);
+    }
+    .kline-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .kline-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .sq { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    .integrity-list {
+      margin: 0.5rem 0 0;
+      padding-left: 1.2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .integrity-list li.ok { color: #8dbd98; }
+    .integrity-list li.fail { color: #d18c8c; }
+
+    footer.disclaimer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    footer.disclaimer p { margin: 0.4rem 0; }
+
+    @media print {
+      body { background: #fff; color: #222; }
+      :root {
+        --bg: #fff; --panel: #fafaf8; --text: #222; --muted: #555;
+        --gold: #6b5a2b; --border: #ccc;
+      }
+      .wrap { padding: 0; max-width: 100%; }
+      section.report-section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="report-header">
+      <h1>紫微斗数 · AI 命盘报告</h1>
+      <p class="subtitle" id="meta-subtitle">生成时间 · <span id="meta-generated"></span></p>
+      <div class="meta-grid">
+        <div><strong>阳历</strong> · <span id="meta-solar">1995-07-19</span></div>
+        <div><strong>出生地</strong> · <span id="meta-birthplace">广东省深圳市</span></div>
+        <div><strong>标准时间</strong> · <span id="meta-local-time">11:30</span></div>
+        <div><strong>真太阳时</strong> · <span id="meta-true-solar-time">1995-07-19 10:59</span></div>
+        <div><strong>时间修正</strong> · <span id="meta-time-correction">-30.15分钟</span></div>
+        <div><strong>坐标来源</strong> · <span id="meta-geo-source">online</span></div>
+        <div><strong>性别</strong> · <span id="meta-gender">男</span></div>
+        <div><strong>五行局</strong> · <span id="meta-five">土5局</span></div>
+        <div><strong>流年分析年</strong> · <span id="meta-target-year">2027</span></div>
+      </div>
+    </header>
+
+    <section class="report-section" id="section-natal">
+      <h2>紫微命盘综合批注</h2>
+      <div class="prose" id="content-natal">
+<h3>壹· 命格总断</h3>
+<ul><li><strong>格局层次</strong>：天机化禄坐命，贪狼同宫。</li><li><strong>性情剖析</strong>：外显机敏灵活。</li></ul>
+<h3>贰· 事业与财运</h3>
+<ul><li><strong>官禄方向</strong>：七杀坐官禄宫。</li><li><strong>财运机缘</strong>：天同破军坐财帛宫。</li></ul>
+<h3>叁· 婚姻与情感</h3>
+<ul><li><strong>姻缘概况</strong>：太阳天府坐夫妻宫。</li><li><strong>相处之道</strong>：身宫在夫妻宫。</li></ul>
+<h3>肆· 六亲与人际</h3>
+<ul><li><strong>人际关系</strong>：廉贞坐交友宫。</li><li><strong>家庭关系</strong>：紫微化科入父母宫。</li></ul>
+<h3>伍· 运势隐忧与建议</h3>
+<ul><li><strong>健康提醒</strong>：疾厄宫无主星。</li><li><strong>趋吉避凶</strong>：太阴化忌入兄弟宫。</li></ul>
+<h3>陆· 命格金句</h3>
+<blockquote>心思如棋局局新</blockquote>
+<p><em>注：仅供参考。</em></p>
+      </div>
+    </section>
+
+    <section class="report-section" id="section-chart">
+      <h2>紫微排盘图</h2>
+      <div id="chart-grid" class="palace-grid">
+        <p class="placeholder">Agent：将命盘 JSON 写入 #chart-data 后，此处自动渲染十二宫排盘图。</p>
+      </div>
+    </section>
+
+    <section class="report-section" id="section-yearly">
+      <h2>流年运势</h2>
+      <div class="prose" id="content-yearly">
+<h3>壹· 年度总象</h3>
+<ul><li><strong>流年定调</strong>：丁未年。</li><li><strong>核心际遇</strong>：流年命宫叠入交友宫。</li></ul>
+<h3>贰· 名利机缘</h3>
+<ul><li><strong>事业走势</strong>：巨门化忌冲照。</li><li><strong>求财建议</strong>：太阴化禄利正财。</li></ul>
+<h3>叁· 情感与家宅</h3>
+<ul><li><strong>流年姻缘</strong>：流年夫妻宫叠官禄宫。</li><li><strong>家宅平安</strong>：田宅宫天梁化权。</li></ul>
+<h3>肆· 月令趋势</h3>
+<ul><li><strong>吉运月份</strong>：农历三月、九月。</li><li><strong>注意月份</strong>：农历六月、十二月。</li></ul>
+<h3>伍· 锦囊寄语</h3>
+<ul><li><strong>行事准则</strong>：宜守不宜攻。</li><li><strong>关键提醒</strong>：注意咽喉健康。</li></ul>
+<p><em>注：仅供参考。</em></p>
+      </div>
+    </section>
+
+    <section class="report-section" id="section-kline">
+      <h2>人生运势 K 线（1–100 岁）</h2>
+      <p class="prose" style="margin:0 0 0.75rem;color:var(--muted);font-size:0.88rem;">
+        竖轴为运势分 0–100；每根蜡烛为一年内开盘、收盘、最高、最低。数据来自模型 JSON，需满足 open 连贯与 high/low 约束。
+      </p>
+      <div class="kline-wrap">
+        <canvas id="kline-canvas" width="800" height="280" aria-label="人生运势K线图"></canvas>
+        <div class="kline-legend">
+          <span><i class="sq" style="background:var(--bull)"></i> 收涨（收盘≥开盘）</span>
+          <span><i class="sq" style="background:var(--bear)"></i> 收跌</span>
+          <span id="kline-hint"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="report-section" id="section-integrity">
+      <h2>数据完整性状态</h2>
+      <div class="prose">
+        <p id="integrity-summary" class="placeholder">Agent：生成后此处应显示“通过/失败”摘要。</p>
+        <ul id="integrity-checks" class="integrity-list"></ul>
+      </div>
+    </section>
+
+    <footer class="disclaimer">
+      <p><strong>重要说明：</strong>术数推演仅供参考。命盘综合解读：命由天定，事在人为，望善加把握。流年分析：流年运势受多方因素影响，仅供参考，切勿执着。人生 K 线：为基于命盘语义的示意性推演，不具有预测效力。</p>
+    </footer>
+  </div>
+
+  <!-- Agent：将下文替换为长度为 100 的 JSON 数组；字段 age,open,close,high,low,brief（可选 reason、year） -->
+  <script type="application/json" id="chart-data">{"birthSolar": "1995-07-19", "fiveElementsClass": "土5局", "lifePalaceName": "命宫（寅宫）", "bodyPalaceName": "夫妻宫（子宫）", "targetYear": "2027", "palaces": [{"name": "命宫", "branch": "寅", "stem": "戊", "majorStars": [{"name": "天机", "description": "谋略之星，主机变、思虑、技术。", "mutagen": "化禄"}, {"name": "贪狼", "description": "桃花才艺之星，主欲望、交际、才华。"}], "minorStars": [{"name": "陀罗"}, {"name": "火星"}], "adjectiveStars": [], "isLifePalace": true, "isBodyPalace": false, "decadalRange": "5-14"}, {"name": "兄弟宫", "branch": "丑", "stem": "己", "majorStars": [{"name": "太阴", "description": "阴柔之星，主财富、情感、细腻。", "mutagen": "化忌"}], "minorStars": [], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "15-24"}, {"name": "夫妻宫", "branch": "子", "stem": "戊", "majorStars": [{"name": "太阳", "description": "光明之星，主名望、外显、助人。"}, {"name": "天府", "description": "库藏之星，主稳重、资源、包容。"}], "minorStars": [{"name": "天魁"}], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": true, "decadalRange": "25-34"}, {"name": "子女宫", "branch": "亥", "stem": "丁", "majorStars": [{"name": "武曲", "description": "财帛之星，主执行、理财、刚毅。"}], "minorStars": [], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "35-44"}, {"name": "财帛宫", "branch": "戌", "stem": "丙", "majorStars": [{"name": "天同", "description": "福德之星，主温和、享受、人缘。"}, {"name": "破军", "description": "耗星，主破旧立新、变革、起伏。"}], "minorStars": [], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "45-54"}, {"name": "疾厄宫", "branch": "酉", "stem": "乙", "majorStars": [], "minorStars": [{"name": "左辅"}, {"name": "文曲"}], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "55-64"}, {"name": "迁移宫", "branch": "申", "stem": "甲", "majorStars": [], "minorStars": [{"name": "天钺"}], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "65-74"}, {"name": "交友宫", "branch": "未", "stem": "癸", "majorStars": [{"name": "廉贞", "description": "囚杀之星，主原则、欲望、变化。"}], "minorStars": [], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "75-84"}, {"name": "官禄宫", "branch": "午", "stem": "壬", "majorStars": [{"name": "七杀", "description": "将星，主开创、决断、波折。"}], "minorStars": [{"name": "地空"}], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "85-94"}, {"name": "田宅宫", "branch": "巳", "stem": "辛", "majorStars": [{"name": "天梁", "description": "荫寿之星，主护持、原则、长辈缘。", "mutagen": "化权"}], "minorStars": [{"name": "右弼"}, {"name": "文昌"}, {"name": "天马"}], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "95-104"}, {"name": "福德宫", "branch": "辰", "stem": "庚", "majorStars": [{"name": "天相", "description": "印绶之星，主辅佐、制度、体面。"}], "minorStars": [{"name": "擎羊"}, {"name": "地劫"}], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "105-114"}, {"name": "父母宫", "branch": "卯", "stem": "己", "majorStars": [{"name": "紫微", "description": "帝座之星，主尊贵、统御、格局。", "mutagen": "化科"}, {"name": "巨门", "description": "口舌暗曜，主表达、疑虑、是非。"}], "minorStars": [{"name": "禄存"}, {"name": "铃星"}], "adjectiveStars": [], "isLifePalace": false, "isBodyPalace": false, "decadalRange": "115-124"}]}</script>
+  <script type="application/json" id="kline-data">[{"age": 1, "open": 50.0, "close": 47.53, "high": 52.78, "low": 46.96, "brief": "岁1"}, {"age": 2, "open": 47.53, "close": 47.28, "high": 49.7, "low": 43.83, "brief": "岁2"}, {"age": 3, "open": 47.28, "close": 46.21, "high": 49.23, "low": 45.89, "brief": "岁3"}, {"age": 4, "open": 46.21, "close": 48.84, "high": 50.44, "low": 43.86, "brief": "岁4"}, {"age": 5, "open": 48.84, "close": 48.25, "high": 50.56, "low": 46.44, "brief": "岁5"}, {"age": 6, "open": 48.25, "close": 48.84, "high": 49.37, "low": 45.41, "brief": "岁6"}, {"age": 7, "open": 48.84, "close": 46.54, "high": 50.5, "low": 46.1, "brief": "岁7"}, {"age": 8, "open": 46.54, "close": 46.83, "high": 47.89, "low": 44.0, "brief": "岁8"}, {"age": 9, "open": 46.83, "close": 45.59, "high": 48.84, "low": 44.94, "brief": "岁9"}, {"age": 10, "open": 45.59, "close": 48.76, "high": 48.98, "low": 42.69, "brief": "岁10"}, {"age": 11, "open": 48.76, "close": 49.76, "high": 53.32, "low": 46.94, "brief": "岁11"}, {"age": 12, "open": 49.76, "close": 52.55, "high": 53.1, "low": 47.54, "brief": "岁12"}, {"age": 13, "open": 52.55, "close": 50.39, "high": 56.35, "low": 49.79, "brief": "岁13"}, {"age": 14, "open": 50.39, "close": 53.48, "high": 55.72, "low": 48.49, "brief": "岁14"}, {"age": 15, "open": 53.48, "close": 51.24, "high": 55.84, "low": 51.16, "brief": "岁15"}, {"age": 16, "open": 51.24, "close": 52.22, "high": 53.05, "low": 48.67, "brief": "岁16"}, {"age": 17, "open": 52.22, "close": 51.07, "high": 55.95, "low": 47.29, "brief": "岁17"}, {"age": 18, "open": 51.07, "close": 50.42, "high": 53.38, "low": 49.35, "brief": "岁18"}, {"age": 19, "open": 50.42, "close": 50.88, "high": 53.11, "low": 47.18, "brief": "岁19"}, {"age": 20, "open": 50.88, "close": 53.95, "high": 54.64, "low": 47.0, "brief": "岁20"}, {"age": 21, "open": 53.95, "close": 54.12, "high": 55.3, "low": 50.31, "brief": "岁21"}, {"age": 22, "open": 54.12, "close": 54.48, "high": 57.0, "low": 52.51, "brief": "岁22"}, {"age": 23, "open": 54.48, "close": 54.47, "high": 55.63, "low": 51.09, "brief": "岁23"}, {"age": 24, "open": 54.47, "close": 52.39, "high": 56.2, "low": 51.41, "brief": "岁24"}, {"age": 25, "open": 52.39, "close": 50.64, "high": 55.46, "low": 46.75, "brief": "岁25"}, {"age": 26, "open": 50.64, "close": 52.89, "high": 56.65, "low": 47.65, "brief": "岁26"}, {"age": 27, "open": 52.89, "close": 54.8, "high": 55.18, "low": 52.22, "brief": "岁27"}, {"age": 28, "open": 54.8, "close": 58.05, "high": 59.23, "low": 52.96, "brief": "岁28"}, {"age": 29, "open": 58.05, "close": 57.8, "high": 60.53, "low": 57.76, "brief": "岁29"}, {"age": 30, "open": 57.8, "close": 56.04, "high": 60.17, "low": 52.08, "brief": "岁30"}, {"age": 31, "open": 56.04, "close": 55.52, "high": 58.05, "low": 53.26, "brief": "岁31"}, {"age": 32, "open": 55.52, "close": 58.47, "high": 60.54, "low": 55.06, "brief": "岁32"}, {"age": 33, "open": 58.47, "close": 58.98, "high": 60.73, "low": 58.31, "brief": "岁33"}, {"age": 34, "open": 58.98, "close": 59.0, "high": 62.8, "low": 58.18, "brief": "岁34"}, {"age": 35, "open": 59.0, "close": 61.4, "high": 62.7, "low": 58.04, "brief": "岁35"}, {"age": 36, "open": 61.4, "close": 63.88, "high": 64.27, "low": 57.7, "brief": "岁36"}, {"age": 37, "open": 63.88, "close": 62.36, "high": 65.28, "low": 61.7, "brief": "岁37"}, {"age": 38, "open": 62.36, "close": 61.59, "high": 64.52, "low": 58.75, "brief": "岁38"}, {"age": 39, "open": 61.59, "close": 62.22, "high": 64.03, "low": 59.35, "brief": "岁39"}, {"age": 40, "open": 62.22, "close": 60.69, "high": 64.18, "low": 58.67, "brief": "岁40"}, {"age": 41, "open": 60.69, "close": 61.27, "high": 64.69, "low": 60.33, "brief": "岁41"}, {"age": 42, "open": 61.27, "close": 63.26, "high": 66.91, "low": 61.12, "brief": "岁42"}, {"age": 43, "open": 63.26, "close": 62.05, "high": 65.72, "low": 61.62, "brief": "岁43"}, {"age": 44, "open": 62.05, "close": 64.4, "high": 64.53, "low": 58.7, "brief": "岁44"}, {"age": 45, "open": 64.4, "close": 62.68, "high": 65.16, "low": 59.32, "brief": "岁45"}, {"age": 46, "open": 62.68, "close": 62.46, "high": 63.44, "low": 58.85, "brief": "岁46"}, {"age": 47, "open": 62.46, "close": 60.35, "high": 64.89, "low": 56.36, "brief": "岁47"}, {"age": 48, "open": 60.35, "close": 58.97, "high": 60.72, "low": 56.33, "brief": "岁48"}, {"age": 49, "open": 58.97, "close": 56.87, "high": 59.66, "low": 54.14, "brief": "岁49"}, {"age": 50, "open": 56.87, "close": 56.8, "high": 59.13, "low": 54.57, "brief": "岁50"}, {"age": 51, "open": 56.8, "close": 59.67, "high": 61.65, "low": 54.54, "brief": "岁51"}, {"age": 52, "open": 59.67, "close": 60.35, "high": 60.85, "low": 58.55, "brief": "岁52"}, {"age": 53, "open": 60.35, "close": 62.31, "high": 64.37, "low": 56.37, "brief": "岁53"}, {"age": 54, "open": 62.31, "close": 61.94, "high": 65.95, "low": 60.35, "brief": "岁54"}, {"age": 55, "open": 61.94, "close": 60.31, "high": 65.16, "low": 58.82, "brief": "岁55"}, {"age": 56, "open": 60.31, "close": 59.64, "high": 63.63, "low": 58.23, "brief": "岁56"}, {"age": 57, "open": 59.64, "close": 59.27, "high": 60.44, "low": 58.55, "brief": "岁57"}, {"age": 58, "open": 59.27, "close": 57.34, "high": 61.09, "low": 54.26, "brief": "岁58"}, {"age": 59, "open": 57.34, "close": 58.03, "high": 58.81, "low": 53.48, "brief": "岁59"}, {"age": 60, "open": 58.03, "close": 56.12, "high": 60.49, "low": 55.44, "brief": "岁60"}, {"age": 61, "open": 56.12, "close": 59.19, "high": 61.02, "low": 53.24, "brief": "岁61"}, {"age": 62, "open": 59.19, "close": 62.15, "high": 65.64, "low": 56.26, "brief": "岁62"}, {"age": 63, "open": 62.15, "close": 64.62, "high": 66.02, "low": 58.99, "brief": "岁63"}, {"age": 64, "open": 64.62, "close": 66.08, "high": 69.69, "low": 64.55, "brief": "岁64"}, {"age": 65, "open": 66.08, "close": 64.46, "high": 68.41, "low": 60.57, "brief": "岁65"}, {"age": 66, "open": 64.46, "close": 62.15, "high": 67.73, "low": 58.62, "brief": "岁66"}, {"age": 67, "open": 62.15, "close": 60.72, "high": 63.98, "low": 58.54, "brief": "岁67"}, {"age": 68, "open": 60.72, "close": 63.23, "high": 64.78, "low": 57.44, "brief": "岁68"}, {"age": 69, "open": 63.23, "close": 65.09, "high": 65.94, "low": 59.46, "brief": "岁69"}, {"age": 70, "open": 65.09, "close": 64.88, "high": 67.76, "low": 62.4, "brief": "岁70"}, {"age": 71, "open": 64.88, "close": 61.96, "high": 68.35, "low": 59.08, "brief": "岁71"}, {"age": 72, "open": 61.96, "close": 60.31, "high": 62.35, "low": 57.65, "brief": "岁72"}, {"age": 73, "open": 60.31, "close": 62.58, "high": 63.37, "low": 59.86, "brief": "岁73"}, {"age": 74, "open": 62.58, "close": 64.41, "high": 66.81, "low": 59.7, "brief": "岁74"}, {"age": 75, "open": 64.41, "close": 62.75, "high": 65.07, "low": 61.15, "brief": "岁75"}, {"age": 76, "open": 62.75, "close": 63.92, "high": 64.65, "low": 62.36, "brief": "岁76"}, {"age": 77, "open": 63.92, "close": 66.38, "high": 67.1, "low": 60.78, "brief": "岁77"}, {"age": 78, "open": 66.38, "close": 66.37, "high": 67.13, "low": 62.55, "brief": "岁78"}, {"age": 79, "open": 66.37, "close": 63.79, "high": 68.7, "low": 62.2, "brief": "岁79"}, {"age": 80, "open": 63.79, "close": 63.75, "high": 66.18, "low": 62.54, "brief": "岁80"}, {"age": 81, "open": 63.75, "close": 60.96, "high": 64.1, "low": 59.34, "brief": "岁81"}, {"age": 82, "open": 60.96, "close": 63.63, "high": 65.82, "low": 60.26, "brief": "岁82"}, {"age": 83, "open": 63.63, "close": 65.93, "high": 66.82, "low": 60.4, "brief": "岁83"}, {"age": 84, "open": 65.93, "close": 66.27, "high": 68.58, "low": 64.1, "brief": "岁84"}, {"age": 85, "open": 66.27, "close": 63.43, "high": 68.76, "low": 61.18, "brief": "岁85"}, {"age": 86, "open": 63.43, "close": 65.97, "high": 66.92, "low": 61.39, "brief": "岁86"}, {"age": 87, "open": 65.97, "close": 66.39, "high": 69.52, "low": 64.89, "brief": "岁87"}, {"age": 88, "open": 66.39, "close": 66.41, "high": 67.5, "low": 63.43, "brief": "岁88"}, {"age": 89, "open": 66.41, "close": 65.2, "high": 69.49, "low": 64.85, "brief": "岁89"}, {"age": 90, "open": 65.2, "close": 64.58, "high": 66.83, "low": 60.98, "brief": "岁90"}, {"age": 91, "open": 64.58, "close": 64.44, "high": 66.5, "low": 61.36, "brief": "岁91"}, {"age": 92, "open": 64.44, "close": 64.24, "high": 65.23, "low": 60.31, "brief": "岁92"}, {"age": 93, "open": 64.24, "close": 65.16, "high": 67.66, "low": 61.91, "brief": "岁93"}, {"age": 94, "open": 65.16, "close": 65.51, "high": 67.63, "low": 63.43, "brief": "岁94"}, {"age": 95, "open": 65.51, "close": 62.85, "high": 67.15, "low": 58.89, "brief": "岁95"}, {"age": 96, "open": 62.85, "close": 60.91, "high": 64.65, "low": 58.12, "brief": "岁96"}, {"age": 97, "open": 60.91, "close": 57.82, "high": 63.69, "low": 55.66, "brief": "岁97"}, {"age": 98, "open": 57.82, "close": 59.35, "high": 59.73, "low": 56.75, "brief": "岁98"}, {"age": 99, "open": 59.35, "close": 59.35, "high": 59.47, "low": 56.21, "brief": "岁99"}, {"age": 100, "open": 59.35, "close": 59.75, "high": 62.47, "low": 57.4, "brief": "岁100"}]</script>
+
+  <script>
+(function () {
+  document.getElementById('meta-generated').textContent =
+    new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+  function parseKLine() {
+    var el = document.getElementById('kline-data');
+    if (!el) return [];
+    try {
+      var t = el.textContent.trim();
+      var data = JSON.parse(t || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function parseChart() {
+    var el = document.getElementById('chart-data');
+    if (!el) return { palaces: [] };
+    try {
+      var data = JSON.parse(el.textContent.trim() || '{"palaces":[]}');
+      return data && typeof data === 'object' ? data : { palaces: [] };
+    } catch (e) {
+      return { palaces: [] };
+    }
+  }
+
+  function renderChartGrid() {
+    var wrap = document.getElementById('chart-grid');
+    if (!wrap) return;
+    var chart = parseChart();
+    var palaces = Array.isArray(chart.palaces) ? chart.palaces : [];
+    if (palaces.length !== 12) {
+      wrap.innerHTML = '<p class="placeholder">命盘数据不足：需12宫后才可绘制排盘图。</p>';
+      return;
+    }
+    var positionByBranch = {
+      '巳': [0,0], '午':[0,1], '未':[0,2], '申':[0,3],
+      '辰':[1,0], '酉':[1,3], '卯':[2,0], '戌':[2,3],
+      '寅':[3,0], '丑':[3,1], '子':[3,2], '亥':[3,3]
+    };
+    var grid = [[],[],[],[]];
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) grid[r][c] = null;
+    palaces.forEach(function (p) {
+      var pos = positionByBranch[p.branch];
+      if (pos) grid[pos[0]][pos[1]] = p;
+    });
+
+    function renderStars(stars) {
+      if (!Array.isArray(stars) || stars.length === 0) return '<small>无</small>';
+      return stars.map(function (s) {
+        if (!s || !s.name) return '';
+        var tag = s.mutagen ? '<span class="mutagen">[' + s.mutagen + ']</span>' : '';
+        return '<span>' + s.name + tag + '</span>';
+      }).join('、');
+    }
+
+    function oppositeBranch(b) {
+      var order = ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'];
+      var i = order.indexOf(b);
+      if (i < 0) return null;
+      return order[(i + 6) % 12];
+    }
+
+    function renderMajorWithBorrow(palace, allPalaces) {
+      if (Array.isArray(palace.majorStars) && palace.majorStars.length > 0) {
+        return renderStars(palace.majorStars);
+      }
+      var ob = oppositeBranch(palace.branch);
+      var opp = null;
+      for (var j = 0; j < allPalaces.length; j++) {
+        if (allPalaces[j].branch === ob) { opp = allPalaces[j]; break; }
+      }
+      if (opp && Array.isArray(opp.majorStars) && opp.majorStars.length > 0) {
+        return '<span class="borrow-hint">借对宫「' + (opp.name || '') + '」</span>' + renderStars(opp.majorStars);
+      }
+      return renderStars(palace.majorStars);
+    }
+
+    var html = '';
+    for (var row = 0; row < 4; row++) {
+      for (var col = 0; col < 4; col++) {
+        if (row >= 1 && row <= 2 && col >= 1 && col <= 2) {
+          if (row === 1 && col === 1) {
+            html += '<div class="center-cell"><h3>紫微斗数命盘</h3>'
+              + '<p>阳历：' + (chart.birthSolar || '-') + '</p>'
+              + '<p>五行局：' + (chart.fiveElementsClass || '-') + '</p>'
+              + '<p>命宫：' + (chart.lifePalaceName || '-') + ' · 身宫：' + (chart.bodyPalaceName || '-') + '</p>'
+              + '<p>流年：' + (chart.targetYear || '-') + '</p></div>';
+          }
+          continue;
+        }
+        var palace = grid[row][col];
+        if (!palace) {
+          html += '<div class="palace-cell"></div>';
+          continue;
+        }
+        var isMing = palace.isLifePalace || palace.name === '命宫';
+        var klass = 'palace-cell' + (isMing ? ' life' : '') + (palace.isBodyPalace ? ' body' : '');
+        html += '<div class="' + klass + '">'
+          + '<div class="palace-head"><span>' + (palace.stem || '') + (palace.branch || '') + '</span><span>' + (palace.decadalRange || '') + '</span></div>'
+          + '<div class="palace-name">' + (palace.name || '-') + '</div>'
+          + '<div class="palace-stars"><small>主星：</small>' + renderMajorWithBorrow(palace, palaces) + '</div>'
+          + '<div class="palace-stars"><small>辅星：</small>' + renderStars(palace.minorStars) + '</div>'
+          + '</div>';
+      }
+    }
+    wrap.innerHTML = html;
+  }
+
+  function drawKLine() {
+    var canvas = document.getElementById('kline-canvas');
+    var hint = document.getElementById('kline-hint');
+    if (!canvas) return;
+
+    var data = parseKLine();
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var cw = rect.width || 800;
+    var ch = 280;
+    canvas.width = Math.floor(cw * dpr);
+    canvas.height = Math.floor(ch * dpr);
+
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, cw, ch);
+
+    var padL = 40, padR = 12, padT = 14, padB = 28;
+    var gw = cw - padL - padR;
+    var gh = ch - padT - padB;
+
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.fillRect(0, 0, cw, ch);
+
+    ctx.strokeStyle = 'rgba(201,169,98,0.15)';
+    ctx.lineWidth = 1;
+    for (var li = 0; li <= 4; li++) {
+      var y = padT + (gh / 4) * li;
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(cw - padR, y);
+      ctx.stroke();
+      ctx.fillStyle = '#9a9288';
+      ctx.font = '11px system-ui,sans-serif';
+      var val = 100 - li * 25;
+      ctx.fillText(String(val), 4, y + 4);
+    }
+
+    if (data.length === 0) {
+      ctx.fillStyle = '#9a9288';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('暂无 K 线数据：请在 #kline-data 中填入 100 条记录后刷新。', padL, padT + gh / 2);
+      if (hint) hint.textContent = '数据条数：0';
+      return;
+    }
+
+    var n = data.length;
+    var slot = gw / Math.max(n, 1);
+
+    data.forEach(function (row, i) {
+      var open = Number(row.open);
+      var close = Number(row.close);
+      var high = Number(row.high);
+      var low = Number(row.low);
+      if (open !== open) open = 50;
+      if (close !== close) close = open;
+      if (high !== high) high = Math.max(open, close);
+      if (low !== low) low = Math.min(open, close);
+
+      high = Math.min(100, Math.max(0, high));
+      low = Math.min(100, Math.max(0, low));
+      open = Math.min(100, Math.max(0, open));
+      close = Math.min(100, Math.max(0, close));
+
+      function yScale(v) {
+        return padT + gh - (v / 100) * gh;
+      }
+
+      var cx = padL + (n === 1 ? gw / 2 : (i / (n - 1)) * gw);
+      var bw = Math.max(2, slot * 0.55);
+
+      ctx.strokeStyle = '#c4b89f';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx, yScale(high));
+      ctx.lineTo(cx, yScale(low));
+      ctx.stroke();
+
+      var yOpen = yScale(open);
+      var yClose = yScale(close);
+      var top = Math.min(yOpen, yClose);
+      var h = Math.max(Math.abs(yClose - yOpen), 2);
+      var bull = close >= open;
+      ctx.fillStyle = bull ? '#6b9e78' : '#a65d5d';
+      ctx.fillRect(cx - bw / 2, top, bw, h);
+    });
+
+    ctx.fillStyle = '#9a9288';
+    ctx.font = '11px sans-serif';
+    ctx.fillText('1岁', padL, ch - 8);
+    ctx.fillText(String(n) + '岁', cw - padR - 36, ch - 8);
+
+    if (hint) hint.textContent = '数据条数：' + n + ' · 请将鼠标悬停需求留给后续增强（当前离线静态图）';
+  }
+
+  function validateKLine(data) {
+    var result = [];
+    if (data.length !== 100) {
+      result.push({ ok: false, text: "K线条数必须为100条" });
+      return result;
+    }
+    var sortedData = data.slice().sort(function (a, b) {
+      return Number(a.age) - Number(b.age);
+    });
+    var ages = {};
+    var prevClose = null;
+    for (var i = 0; i < sortedData.length; i++) {
+      var row = sortedData[i];
+      var age = Number(row.age);
+      var open = Number(row.open);
+      var close = Number(row.close);
+      var high = Number(row.high);
+      var low = Number(row.low);
+      if (!Number.isFinite(age) || age < 1 || age > 100 || ages[age]) {
+        result.push({ ok: false, text: "age必须覆盖1-100且唯一" });
+        break;
+      }
+      ages[age] = true;
+      if ([open, close, high, low].some(function (x) { return !Number.isFinite(x) || x < 0 || x > 100; })) {
+        result.push({ ok: false, text: "存在越界数值（需在0-100）" });
+        break;
+      }
+      if (high < Math.max(open, close) || low > Math.min(open, close)) {
+        result.push({ ok: false, text: "OHLC关系不合法（high/low与open/close冲突）" });
+        break;
+      }
+      if (age === 1 && Math.abs(open - 50) > 1e-6) {
+        result.push({ ok: false, text: "age=1时open必须等于50" });
+        break;
+      }
+      if (prevClose !== null && Math.abs(open - prevClose) > 1e-6) {
+        result.push({ ok: false, text: "K线不连续：open[n]必须等于close[n-1]" });
+        break;
+      }
+      prevClose = close;
+    }
+    if (result.length === 0) {
+      result.push({ ok: true, text: "K线100条与连续性校验通过" });
+    }
+    return result;
+  }
+
+  function renderIntegrity() {
+    var summary = document.getElementById('integrity-summary');
+    var list = document.getElementById('integrity-checks');
+    if (!summary || !list) return;
+    var checks = [];
+
+    var data = parseKLine();
+    checks = checks.concat(validateKLine(data));
+
+    var metaIds = ['meta-solar', 'meta-birthplace', 'meta-local-time', 'meta-true-solar-time', 'meta-time-correction', 'meta-geo-source', 'meta-gender', 'meta-five', 'meta-target-year'];
+    var metaMissing = metaIds.some(function (id) {
+      var el = document.getElementById(id);
+      return !el || /请填入/.test((el.textContent || '').trim());
+    });
+    checks.push({
+      ok: !metaMissing,
+      text: metaMissing ? '元信息未完整填充（阳历/性别/五行局/分析年）' : '元信息完整'
+    });
+
+    var failed = checks.filter(function (x) { return !x.ok; });
+    summary.textContent = failed.length === 0
+      ? '完整性检查通过：可作为离线报告归档。'
+      : ('完整性检查失败：' + failed.length + ' 项不通过，请先修正后再交付。');
+    summary.className = failed.length === 0 ? '' : 'placeholder';
+
+    list.innerHTML = '';
+    checks.forEach(function (item) {
+      var li = document.createElement('li');
+      li.className = item.ok ? 'ok' : 'fail';
+      li.textContent = (item.ok ? '✓ ' : '✗ ') + item.text;
+      list.appendChild(li);
+    });
+  }
+
+  window.addEventListener('resize', function () {
+    drawKLine();
+  });
+  drawKLine();
+  renderChartGrid();
+  renderIntegrity();
+})();
+  </script>
+</body>
+</html>
