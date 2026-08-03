@@ -14,7 +14,7 @@ source.dir = .
 main = app.py
 
 # 依赖
-requirements = python3,kivy,fastapi,uvicorn,httpx,pydantic,ephem,lunisolar,cnlunar,psutil,openai,aiofiles
+requirements = python3,kivy,lunar_python,fastapi,uvicorn,httpx,pydantic,psutil
 
 # Android 权限
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE,FOREGROUND_SERVICE
