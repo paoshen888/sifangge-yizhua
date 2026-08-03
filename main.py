@@ -23,14 +23,14 @@ if __name__ == "__main__":
                     birthday = qs.get("birthday", [""])[0]
                     gender = qs.get("gender", ["男"])[0]
                     try:
-                    mod = __import__(engine)
-                except ImportError as ie:
-                    self.send_json({"error": f"引擎 {engine} 加载失败: {ie}"}, 500)
-                    return
+                        mod = __import__(engine)
+                    except ImportError as ie:
+                        self.send_json({"error": f"引擎 {engine} 加载失败: {ie}", "code": "ENGINE_IMPORT_ERROR"}, 500)
+                        return
                     result = mod.paipan(birthday, gender)
                     self.send_json(result)
                 except Exception as e:
-                    self.send_json({"error": str(e)}, 500)
+                    self.send_json({"error": str(e), "code": "PAN_ERROR"}, 500)
             elif self.path == "/" or self.path == "":
                 self.send_response(302)
                 self.send_header("Location", "/frontend/mobile.html")
