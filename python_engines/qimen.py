@@ -44,8 +44,23 @@ if paipan is None:
             spec.loader.exec_module(paipan)
             break
 
+# 方法3: 自动 pip install
 if paipan is None:
-    print("错误: 找不到 qimendunjia (paipan.py)")
+    print("⚠ 正在自动安装 qimendunjia ...")
+    import subprocess
+    try:
+        r = subprocess.run([sys.executable, "-m", "pip", "install", "qimendunjia", 
+                           "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"],
+                          capture_output=True, text=True, timeout=60)
+        if r.returncode == 0:
+            import paipan as _paipan_mod
+            paipan = _paipan_mod
+            print("✅ qimendunjia 安装成功")
+    except Exception:
+        pass
+
+if paipan is None:
+    print("❌ 找不到 qimendunjia (paipan.py)")
     print("请运行: pip install qimendunjia")
     sys.exit(1)
 
@@ -357,16 +372,7 @@ def main():
     args = sys.argv[1:]
 
     if len(args) < 1:
-        print("奇门遁甲排盘引擎 — 100% 还原༺四方阁༻易爪龙虾排盘算法")
-        print("基于 qimendunjia + lunar_python，纯本地计算，¥0 费用")
-        print()
-        print("用法: python qimen.py <日期时间> [选项]")
-        print()
-        print("示例:")
-        print("  python qimen.py 1996-08-15 12:56")
-        print("  python qimen.py 2026-07-30 16:30")
-        print("  python qimen.py 1996-08-15 12:56 --json")
-        return
+        args = ["2026-08-03", "16:00"]
 
     birth_str = args[0] + (" " + args[1] if len(args) > 1 and not args[1].startswith("--") else "")
     json_output = "--json" in args
