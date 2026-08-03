@@ -19,7 +19,7 @@ jobs:
       - name: Install buildozer
         run: |
           sudo apt update
-          sudo apt install -y python3-pip openjdk-17-jdk zlib1g-dev libncurses-dev autoconf automake libtool libffi-dev libssl-dev
+          sudo apt install -y python3-pip openjdk-17-jdk zlib1g-dev libncurses-dev autoconf automake libtool autoconf-archive pkg-config libffi-dev libssl-dev libltdl-dev
           # Fix libtinfo5: use libtinfo6 with symlink for backward compat
           sudo apt install -y libtinfo6
           sudo ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5 || true
