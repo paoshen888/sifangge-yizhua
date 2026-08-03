@@ -22,7 +22,11 @@ if __name__ == "__main__":
                     engine = qs.get("engine", ["bazi"])[0]
                     birthday = qs.get("birthday", [""])[0]
                     gender = qs.get("gender", ["男"])[0]
+                    try:
                     mod = __import__(engine)
+                except ImportError as ie:
+                    self.send_json({"error": f"引擎 {engine} 加载失败: {ie}"}, 500)
+                    return
                     result = mod.paipan(birthday, gender)
                     self.send_json(result)
                 except Exception as e:
