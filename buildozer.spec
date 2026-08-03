@@ -14,7 +14,7 @@ source.dir = .
 main = app.py
 
 # 依赖
-requirements = python3,fastapi,uvicorn,httpx,pydantic,psutil,android
+requirements = python3,httpx
 
 # Android 权限
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE,FOREGROUND_SERVICE
