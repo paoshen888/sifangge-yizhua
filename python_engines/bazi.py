@@ -195,16 +195,16 @@ def build_yearly_detail(solar, sex, da_yun_list):
 
 
 def parse_args():
-    args = {"birth":"", "sex":1, "json":False, "reading":False, "verbose":False}
+    args = {"birth":"2026-08-03 16:00", "sex":1, "json":False, "reading":True, "verbose":False}
     remaining = []
     for arg in sys.argv[1:]:
-        if arg == "--json": args["json"] = True
-        elif arg == "--reading": args["reading"] = True
+        if arg == "--json": args["json"] = True; args["reading"] = False
+        elif arg == "--reading": args["reading"] = True; args["json"] = False
         elif arg == "--verbose": args["verbose"] = True
+        elif arg in ("女","0","female","F"): args["sex"] = 0
+        elif arg in ("男","1","male","M"): args["sex"] = 1
         else: remaining.append(arg)
-    if len(remaining) < 2: return None
-    args["birth"] = remaining[0]
-    args["sex"] = 0 if remaining[1] in ("女","0","female","F") else 1
+    if len(remaining) >= 1: args["birth"] = remaining[0]
     return args
 
 
