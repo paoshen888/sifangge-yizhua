@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +23,7 @@ jobs:
           # Fix libtinfo5: use libtinfo6 with symlink for backward compat
           sudo apt install -y libtinfo6
           sudo ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5 || true
-          pip install buildozer cython
+          pip install pip==24.0 buildozer cython
 
       - name: Accept Android SDK licenses
         run: |
