@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
 
@@ -19,7 +19,7 @@ jobs:
       - name: Install buildozer
         run: |
           sudo apt update
-          sudo apt install -y python3-pip openjdk-17-jdk zlib1g-dev libncurses5-dev libtinfo5 autoconf automake libtool
+          sudo apt install -y python3-pip openjdk-17-jdk zlib1g-dev libncurses5-dev libtinfo5 autoconf automake libtool libffi-dev libssl-dev
           pip install buildozer cython
 
       - name: Build APK
