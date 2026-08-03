@@ -14,7 +14,7 @@ source.dir = .
 main = app.py
 
 # 依赖
-requirements = python3,fastapi,uvicorn,httpx,pydantic,psutil
+requirements = python3,fastapi,uvicorn,httpx,pydantic,psutil,android
 
 # Android 权限
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE,FOREGROUND_SERVICE
@@ -61,4 +61,3 @@ warn_on_root = 1
 
 
 
-p4a.bootstrap = webview
