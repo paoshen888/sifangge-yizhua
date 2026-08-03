@@ -51,6 +51,7 @@ android.release_artifact = aab
 
 # 跳过 Android 检查
 p4a.branch = master
+p4a.local_recipes = ./p4a/recipes
 
 # 超时
 buildozer.build_timeout = 3600
