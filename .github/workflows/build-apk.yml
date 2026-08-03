@@ -16,22 +16,14 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install buildozer
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y python3-pip openjdk-17-jdk zlib1g-dev libncurses-dev autoconf automake libtool autoconf-archive pkg-config libffi-dev libssl-dev libltdl-dev
-          # Fix libtinfo5: use libtinfo6 with symlink for backward compat
           sudo apt install -y libtinfo6
           sudo ln -sf /usr/lib/x86_64-linux-gnu/libtinfo.so.6 /usr/lib/x86_64-linux-gnu/libtinfo.so.5 || true
-          pip install pip==24.0 buildozer cython
-
-      - name: Accept Android SDK licenses
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
-          yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses 2>/dev/null || true
-          # Or accept via buildozer env
-          mkdir -p ~/.buildozer/android/platform
-          echo y | buildozer android debug 2>&1 | head -5 || true
+          pip install pip==23.0.1
+          pip install buildozer cython virtualenv
 
       - name: Build APK
         run: |
