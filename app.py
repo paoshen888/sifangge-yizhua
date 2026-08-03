@@ -1,34 +1,28 @@
 """
-四方阁易爪 — Android WebView + 内置 HTTP Server
-直接使用 Android WebView，绕过 kivy SDL 渲染层
+四方阁易爪 — 纯后台 HTTP Server
+不依赖任何 UI 框架，通过浏览器访问
 """
 
-import sys
-import os
-import threading
-import time
-from android.webkit import WebView, WebViewClient
-from android.app import Activity
-from android.os import Bundle
+import sys, os, time, threading
 
-# ===== 启动 FastAPI 服务器（后台线程） =====
-def start_backend():
+def start_service():
     apk_dir = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, apk_dir)
+    sys.path.insert(0, os.path.join(apk_dir, "python_engines"))
+    
     import uvicorn
     from main import app
     uvicorn.run(app, host="127.0.0.1", port=8899, log_level="warning")
 
-backend_thread = threading.Thread(target=start_backend, daemon=True)
-backend_thread.start()
-time.sleep(2)
+threading.Thread(target=start_service, daemon=True).start()
 
-# ===== WebView Activity =====
-class MainActivity(Activity):
-    def onCreate(self, savedInstanceState):
-        super().onCreate(savedInstanceState)
-        webview = WebView(self)
-        webview.getSettings().setJavaScriptEnabled(True)
-        webview.setWebViewClient(WebViewClient())
-        webview.loadUrl("http://127.0.0.1:8899/")
-        self.setContentView(webview)
+# Open browser
+import android, android.activity
+from jnius import autoclass
+Intent = autoclass("android.content.Intent")
+Uri = autoclass("android.net.Uri")
+intent = Intent(Intent.ACTION_VIEW)
+intent.setData(Uri.parse("http://127.0.0.1:8899/"))
+intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+currentActivity = android.activity._activity
+currentActivity.startActivity(intent)
