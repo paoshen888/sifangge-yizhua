@@ -144,6 +144,14 @@ if __name__ == "__main__":
                     time = qs.get("time", ["12:00"])[0]
                     gender = qs.get("gender", ["男"])[0]
                     birthday = qs.get("birthday", [""])[0]
+                    year = qs.get("year", [""])[0]
+                    month = qs.get("month", [""])[0]
+                    day = qs.get("day", [""])[0]
+                    hour = qs.get("hour", [""])[0]
+                    minute = qs.get("minute", [""])[0]
+                    if year and month and day:
+                        date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                        time = f"{hour.zfill(2) if hour else '12'}:{minute.zfill(2) if minute else '00'}"
 
                     mod_name = ENGINE_MAP.get(engine, "bazi")
 
