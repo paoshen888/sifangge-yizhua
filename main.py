@@ -34,7 +34,11 @@ if __name__ == "__main__":
                 sys.stdout = io.StringIO()
                 sys.argv = argv
                 sys.path.insert(0, ENG_DIR)
-                mod = importlib.import_module(mod_name)
+                try:
+                    mod = importlib.import_module(mod_name)
+                except Exception as ie:
+                    result.put(("error", f"模块导入失败: {ie}"))
+                    return
                 if hasattr(mod, "main"):
                     mod.main()
                 output = sys.stdout.getvalue()
