@@ -4,6 +4,7 @@ import os, sys, json, importlib, io, threading, queue
 DIR = os.path.dirname(os.path.abspath(__file__))
 ENG_DIR = os.path.join(DIR, "python_engines")
 sys.path.insert(0, DIR)
+sys.path.insert(0, os.path.join(ENG_DIR, 'lunar_python'))
 sys.path.insert(0, ENG_DIR)
 os.chdir(DIR)
 
