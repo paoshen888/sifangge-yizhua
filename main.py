@@ -1,4 +1,4 @@
-"""四方阁易爪 — APK v5 (qimen/qizheng degraded, lunar-python)"""
+"""四方阁易爪 — APK v6 (lunar_python vendored + qimen/qizheng degraded)"""
 import os, sys, json, importlib, io, threading, queue
 
 DIR = os.path.dirname(os.path.abspath(__file__))
