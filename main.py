@@ -8,15 +8,61 @@ sys.path.insert(0, ENG_DIR)
 
 
 
-# lunar_python path setup
+# lunar_python registration with importlib (supports .py files in P4A)
 _lunar_dir = os.path.join(ENG_DIR, 'lunar_python')
 if os.path.isdir(_lunar_dir):
-    if _lunar_dir not in sys.path:
-        sys.path.insert(0, _lunar_dir)
+    import importlib.util as _iu
+    _lunar_sys_path = [_lunar_dir]
     for _sub in ['util', 'eightchar']:
-        _sub_dir = os.path.join(_lunar_dir, _sub)
-        if os.path.isdir(_sub_dir) and _sub_dir not in sys.path:
-            sys.path.insert(0, _sub_dir)
+        _sd = os.path.join(_lunar_dir, _sub)
+        if os.path.isdir(_sd):
+            _lunar_sys_path.append(_sd)
+    for _sp in _lunar_sys_path:
+        if _sp not in sys.path:
+            sys.path.insert(0, _sp)
+    # Register all modules with correct package context
+    _lunar_modules = {}
+    for _root, _dirs, _files in os.walk(_lunar_dir):
+        for _fn in _files:
+            if not _fn.endswith('.py'):
+                continue
+            _fpath = os.path.join(_root, _fn)
+            _rel = os.path.relpath(_fpath, _lunar_dir).replace('\\', '/')
+            _simple = _fn[:-3]
+            if '/' in _rel:
+                _sub = _rel.split('/')[-2]
+                _full = 'lunar_python.' + _sub + '.' + _simple if _simple != '__init__' else 'lunar_python.' + _sub
+            else:
+                _full = 'lunar_python.' + _simple if _simple != '__init__' else 'lunar_python'
+            _lunar_modules[_fpath] = _full
+    # Sort: subpackages init first, then dependency order
+    def _lunar_sort_key(item):
+        _fp, _fn = item
+        _b = os.path.basename(_fp)
+        if _b == '__init__.py':
+            return (0, _fp)
+        if 'util' in _fp:
+            return (1, _fp)
+        if 'eightchar' in _fp:
+            return (2, _fp)
+        return (3, _fp)
+    
+    for _fp, _full in sorted(_lunar_modules.items(), key=_lunar_sort_key):
+        try:
+            _spec = _iu.spec_from_file_location(_full, _fp, submodule_search_locations=os.path.dirname(_fp))
+            if _spec and _spec.loader:
+                _mod = _iu.module_from_spec(_spec)
+                sys.modules[_full] = _mod
+                _spec.loader.exec_module(_mod)
+        except Exception as _e:
+            print(f"lunar reg err {_full}: {_e}")
+    
+    # Ensure package modules are accessible
+    for _sub in ['util', 'eightchar']:
+        _sub_full = 'lunar_python.' + _sub
+        if _sub_full in sys.modules:
+            setattr(sys.modules['lunar_python'], _sub, sys.modules[_sub_full])
+    del _lunar_modules, _lunar_sort_key
 
 
 os.chdir(DIR)
