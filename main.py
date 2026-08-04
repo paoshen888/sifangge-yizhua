@@ -1,8 +1,10 @@
 """四方阁易爪 — 入口文件"""
-import os, sys, json, subprocess
+import os, sys, json, importlib, io, threading, queue
+
 DIR = os.path.dirname(os.path.abspath(__file__))
+ENG_DIR = os.path.join(DIR, "python_engines")
 sys.path.insert(0, DIR)
-sys.path.insert(0, os.path.join(DIR, "python_engines"))
+sys.path.insert(0, ENG_DIR)
 os.chdir(DIR)
 
 if __name__ == "__main__":
@@ -16,6 +18,39 @@ if __name__ == "__main__":
         "haoma": "haoma", "fengshui": "fengshui", "reading": "reading",
         "hehun": "hehun", "yunshi": "yunshi",
     }
+
+    def run_engine_in_thread(mod_name, argv):
+        """Run engine main() in a separate thread with StringIO capture"""
+        result = queue.Queue()
+        def _run():
+            old_stdout = sys.stdout
+            old_argv = sys.argv
+            old_path = sys.path[:]
+            try:
+                sys.stdout = io.StringIO()
+                sys.argv = argv
+                sys.path.insert(0, ENG_DIR)
+                mod = importlib.import_module(mod_name)
+                if hasattr(mod, "main"):
+                    mod.main()
+                output = sys.stdout.getvalue()
+                result.put(("ok", output))
+            except Exception as e:
+                import traceback
+                result.put(("error", f"{e}\n{traceback.format_exc()[-300:]}"))
+            finally:
+                sys.stdout = old_stdout
+                sys.argv = old_argv
+                sys.path = old_path
+        t = threading.Thread(target=_run, daemon=True)
+        t.start()
+        t.join(timeout=30)
+        if t.is_alive():
+            return ("error", "引擎执行超时(30s)")
+        try:
+            return result.get_nowait()
+        except:
+            return ("error", "引擎无返回")
 
     class Handler(http.server.SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
@@ -32,70 +67,57 @@ if __name__ == "__main__":
                     gender = qs.get("gender", ["男"])[0]
                     birthday = qs.get("birthday", [""])[0]
 
-                    script = ENGINE_MAP.get(engine, "bazi")
-                    eng_dir = os.path.join(DIR, "python_engines")
+                    mod_name = ENGINE_MAP.get(engine, "bazi")
 
                     if birthday:
                         parts = birthday.split(" ")
                         date = parts[0] if parts else birthday
                         time = parts[1] if len(parts) > 1 else "12:00"
 
-                    args = [sys.executable]
                     if engine == "bazi":
-                        args += [os.path.join(eng_dir, script + ".py"), date, time, gender]
+                        argv = ["bazi", date, time, gender]
                     elif engine == "ziwei":
-                        args += [os.path.join(eng_dir, script + ".py"), date, time, gender]
+                        argv = ["ziwei", date, time, gender]
                     elif engine == "qizheng":
-                        args += [os.path.join(eng_dir, script + ".py"), date, time, gender]
+                        argv = ["qizheng", date, time, gender]
                     elif engine == "bazhai":
-                        args += [os.path.join(eng_dir, script + ".py"), date, time, gender]
+                        argv = ["bazhai", date, time, gender]
                     elif engine == "fengshui":
-                        args += [os.path.join(eng_dir, script + ".py"), date, time, gender]
+                        argv = ["fengshui", date, time, gender]
                     elif engine in ("liuren", "qimen"):
-                        args += [os.path.join(eng_dir, script + ".py"), date, time]
+                        argv = [engine, date, time]
                     elif engine == "yunshi":
-                        args += [os.path.join(eng_dir, script + ".py"), date, time, gender]
+                        argv = ["yunshi", date, time, gender]
                     elif engine == "xingming":
                         name = qs.get("name", [date])[0]
-                        args += [os.path.join(eng_dir, script + ".py"), name]
+                        argv = ["xingming", name]
                     elif engine == "haoma":
                         number = qs.get("number", [date])[0]
-                        args += [os.path.join(eng_dir, script + ".py"), number]
+                        argv = ["haoma", number]
                     elif engine == "hehun":
-                        args += [os.path.join(eng_dir, script + ".py"), date, time, gender]
+                        argv = ["hehun", date, time, gender]
                     elif engine == "reading":
-                        args += [os.path.join(eng_dir, script + ".py"), date, time, gender]
+                        argv = ["reading", date, time, gender]
                     elif engine == "huangli":
-                        args += [os.path.join(eng_dir, script + ".py"), date]
+                        argv = ["huangli", date]
                     else:
-                        args += [os.path.join(eng_dir, script + ".py"), date, time, gender]
+                        argv = [engine, date, time, gender]
 
-                    # Try .py first, fallback to .pyc (p4a compiled)
-                    if not os.path.exists(args[1]):
-                        pyc_path = args[1][:-3] + ".pyc"
-                        if os.path.exists(pyc_path):
-                            args[1] = pyc_path
-                        else:
-                            # Also try just passing the module to python -m
-                            self.send_json({"error": f"脚本文件不存在: {args[1]}", "code": "SCRIPT_NOT_FOUND"}, 500)
-                            return
+                    status, output = run_engine_in_thread(mod_name, argv)
 
-                    r = subprocess.run(args, capture_output=True, text=True, timeout=30,
-                                     cwd=eng_dir, env={**os.environ, "PYTHONPATH": eng_dir})
-                    output = r.stdout.strip()
-                    if not output and r.stderr.strip():
-                        self.send_json({"error": r.stderr.strip()[:500], "code": "STDERR"}, 500)
+                    if status == "error":
+                        self.send_json({"error": output, "code": "ENGINE_ERROR"}, 500)
                         return
-                    if not output:
+
+                    if not output or not output.strip():
                         self.send_json({"error": "引擎无输出", "code": "EMPTY"}, 500)
                         return
+
                     try:
                         data = json.loads(output)
                     except json.JSONDecodeError:
                         data = {"raw_output": output}
                     self.send_json(data)
-                except subprocess.TimeoutExpired:
-                    self.send_json({"error": "引擎计算超时", "code": "TIMEOUT"}, 500)
                 except Exception as e:
                     self.send_json({"error": str(e), "code": "PAN_ERROR"}, 500)
             elif self.path == "/" or self.path == "":
