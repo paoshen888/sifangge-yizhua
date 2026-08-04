@@ -202,7 +202,11 @@ def analyze_transit_houses(birth_houses: dict, transit_stars: dict) -> dict:
     return transit_houses
 
 
-def build_qizheng_data(solar: Solar, lon_g: float = 126.52, lat_g: float = 48.23, sex: str = "男"):
+def build_qizheng_data(solar: Solar, lon_g: float = 126.52, lat_g: float = 48.23,
+                       do_transit: bool = False, transit_date_str: str = None) -> dict:
+    """
+    七政四余排盘 — 使用 astropy 内置星历
+    """
     lunar = solar.getLunar()
     if not ASTROPY_AVAILABLE:
         return {
@@ -213,14 +217,6 @@ def build_qizheng_data(solar: Solar, lon_g: float = 126.52, lat_g: float = 48.23
             "lunar": {"year_ganzhi": lunar.getYearInGanZhi(), "month_ganzhi": lunar.getMonthInGanZhi(), "day_ganzhi": lunar.getDayInGanZhi(), "time_ganzhi": lunar.getTimeInGanZhi(), "shengxiao": lunar.getYearShengXiao()},
             "stars": []
         }
-    
-                       do_transit: bool = False, transit_date_str: str = None) -> dict:
-    """
-    七政四余排盘 — 使用 astropy 内置星历
-    """
-    lunar = solar.getLunar()
-    year, month, day = solar.getYear(), solar.getMonth(), solar.getDay()
-    hour, minute = solar.getHour(), solar.getMinute()
 
     # 四柱
     bazi_y = lunar.getYearInGanZhi()
