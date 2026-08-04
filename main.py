@@ -32,7 +32,7 @@ if __name__ == "__main__":
                     birthday = qs.get("birthday", [""])[0]
 
                     script = ENGINE_MAP.get(engine, "bazi.py")
-                    script_path = os.path.join(DIR, script)
+                    script_path = os.path.join(DIR, 'python_engines', script)
                     if not os.path.exists(script_path):
                         self.send_json({"error": f"引擎 {engine} 不存在"}, 404)
                         return
