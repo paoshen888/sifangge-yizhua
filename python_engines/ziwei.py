@@ -14,10 +14,7 @@ import os
 import json
 from datetime import datetime
 
-# 添加 ziwei_offline 引擎路径
-_ENGINE_DIR = os.path.join(os.path.dirname(__file__), "ziwei-offline", "ziwei-ai-html-report-main")
-if _ENGINE_DIR not in sys.path:
-    sys.path.insert(0, os.path.join(_ENGINE_DIR, "tools"))
+# ziwei_offline 引擎路径（同目录）
 
 
 def build_ziwei_data(year, month, day, hour, minute, sex):
