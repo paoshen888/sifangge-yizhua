@@ -26,7 +26,11 @@ if __name__ == "__main__":
             old_stdout = sys.stdout
             old_argv = sys.argv
             old_path = sys.path[:]
+            old_exit = sys.exit
             try:
+                def _safe_exit(code=0):
+                    raise SystemExit(code)
+                sys.exit = _safe_exit
                 sys.stdout = io.StringIO()
                 sys.argv = argv
                 sys.path.insert(0, ENG_DIR)
@@ -35,13 +39,17 @@ if __name__ == "__main__":
                     mod.main()
                 output = sys.stdout.getvalue()
                 result.put(("ok", output))
+            except SystemExit:
+                output = sys.stdout.getvalue()
+                result.put(("ok", output))
             except Exception as e:
                 import traceback
-                result.put(("error", f"{e}\n{traceback.format_exc()[-300:]}"))
+                result.put(("error", f"{e}\n{traceback.format_exc()[-400:]}"))
             finally:
                 sys.stdout = old_stdout
                 sys.argv = old_argv
                 sys.path = old_path
+                sys.exit = old_exit
         t = threading.Thread(target=_run, daemon=True)
         t.start()
         t.join(timeout=30)
@@ -74,7 +82,10 @@ if __name__ == "__main__":
                         date = parts[0] if parts else birthday
                         time = parts[1] if len(parts) > 1 else "12:00"
 
-                    if engine == "bazi":
+                    # fengshui main() expects year, gender as positional args
+                    if engine == "fengshui":
+                        argv = ["fengshui", date.split("-")[0], gender]
+                    elif engine == "bazi":
                         argv = ["bazi", date, time, gender]
                     elif engine == "ziwei":
                         argv = ["ziwei", date, time, gender]
@@ -82,8 +93,6 @@ if __name__ == "__main__":
                         argv = ["qizheng", date, time, gender]
                     elif engine == "bazhai":
                         argv = ["bazhai", date, time, gender]
-                    elif engine == "fengshui":
-                        argv = ["fengshui", date, time, gender]
                     elif engine in ("liuren", "qimen"):
                         argv = [engine, date, time]
                     elif engine == "yunshi":
@@ -100,6 +109,8 @@ if __name__ == "__main__":
                         argv = ["reading", date, time, gender]
                     elif engine == "huangli":
                         argv = ["huangli", date]
+                    elif engine == "liuyao":
+                        argv = ["liuyao", date, time, gender]
                     else:
                         argv = [engine, date, time, gender]
 
