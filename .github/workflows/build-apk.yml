@@ -25,7 +25,14 @@ jobs:
           pip install pip==23.0.1
           pip install buildozer cython virtualenv
 
-      - name: Build APK
+      - name: Copy lunar_python to P4A site-packages
+  run: |
+    mkdir -p ~/.buildozer/android/platform/build-armeabi-v7a_arm64-v8a/build/python-installs/sifanggeyizhua/armeabi-v7a/lunar_python
+    cp -r python_engines/lunar_python/* ~/.buildozer/android/platform/build-armeabi-v7a_arm64-v8a/build/python-installs/sifanggeyizhua/armeabi-v7a/lunar_python/
+    mkdir -p ~/.buildozer/android/platform/build-armeabi-v7a_arm64-v8a/build/python-installs/sifanggeyizhua/arm64-v8a/lunar_python
+    cp -r python_engines/lunar_python/* ~/.buildozer/android/platform/build-armeabi-v7a_arm64-v8a/build/python-installs/sifanggeyizhua/arm64-v8a/lunar_python/
+
+- name: Build APK
         run: |
           export PYTHONPATH="python_engines:$PYTHONPATH"
           yes | buildozer android debug
