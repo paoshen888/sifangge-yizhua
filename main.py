@@ -1,14 +1,20 @@
 """四方阁易爪 — 入口文件"""
-import os, sys
+import os, sys, json, subprocess
 DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, DIR)
-sys.path.insert(0, os.path.join(DIR, "python_engines"))
 os.chdir(DIR)
 
 if __name__ == "__main__":
-    import json, http.server
+    import http.server
 
     PORT = 8899
+    ENGINE_MAP = {
+        "bazi": "bazi.py", "ziwei": "ziwei.py", "liuren": "liuren.py",
+        "qimen": "qimen.py", "liuyao": "liuyao.py", "qizheng": "qizheng.py",
+        "bazhai": "bazhai.py", "huangli": "huangli.py", "xingming": "xingming.py",
+        "haoma": "haoma.py", "fengshui": "fengshui.py", "reading": "reading.py",
+        "hehun": "hehun.py", "yunshi": "yunshi.py",
+    }
 
     class Handler(http.server.SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
@@ -20,15 +26,66 @@ if __name__ == "__main__":
                 try:
                     qs = parse_qs(urlparse(self.path).query)
                     engine = qs.get("engine", ["bazi"])[0]
-                    birthday = qs.get("birthday", [""])[0]
+                    date = qs.get("date", [""])[0]
+                    time = qs.get("time", ["12:00"])[0]
                     gender = qs.get("gender", ["男"])[0]
-                    try:
-                        mod = __import__(engine)
-                    except ImportError as ie:
-                        self.send_json({"error": f"引擎 {engine} 加载失败: {ie}", "code": "ENGINE_IMPORT_ERROR"}, 500)
+                    birthday = qs.get("birthday", [""])[0]
+
+                    script = ENGINE_MAP.get(engine, "bazi.py")
+                    script_path = os.path.join(DIR, script)
+                    if not os.path.exists(script_path):
+                        self.send_json({"error": f"引擎 {engine} 不存在"}, 404)
                         return
-                    result = mod.paipan(birthday, gender)
-                    self.send_json(result)
+
+                    if birthday:
+                        parts = birthday.split(" ")
+                        date = parts[0] if parts else birthday
+                        time = parts[1] if len(parts) > 1 else "12:00"
+
+                    args = []
+                    if engine == "bazi":
+                        args = [date, time, gender]
+                    elif engine == "ziwei":
+                        args = [date, time, gender]
+                    elif engine == "qizheng":
+                        args = [date, time, gender]
+                    elif engine == "bazhai":
+                        args = [date, time, gender]
+                    elif engine == "fengshui":
+                        args = [date, time, gender]
+                    elif engine in ("liuren", "qimen"):
+                        args = [date, time]
+                    elif engine == "yunshi":
+                        args = [date, time, gender]
+                    elif engine == "xingming":
+                        name = qs.get("name", [""])[0]
+                        args = [name] if name else [date]
+                    elif engine == "haoma":
+                        number = qs.get("number", [""])[0]
+                        args = [number] if number else [date]
+                    elif engine == "hehun":
+                        args = [date, time, gender]
+                    elif engine == "reading":
+                        args = [date, time, gender]
+                    elif engine == "huangli":
+                        args = [date]
+                    else:
+                        args = [date, time, gender]
+
+                    cmd = [sys.executable, script_path] + args
+                    r = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=DIR)
+                    output = r.stdout.strip()
+                    if not output:
+                        err = r.stderr.strip() or "引擎无输出"
+                        self.send_json({"error": err, "code": "ENGINE_EMPTY"}, 500)
+                        return
+                    try:
+                        data = json.loads(output)
+                    except json.JSONDecodeError:
+                        data = {"raw_output": output}
+                    self.send_json(data)
+                except subprocess.TimeoutExpired:
+                    self.send_json({"error": "引擎计算超时", "code": "TIMEOUT"}, 500)
                 except Exception as e:
                     self.send_json({"error": str(e), "code": "PAN_ERROR"}, 500)
             elif self.path == "/" or self.path == "":
