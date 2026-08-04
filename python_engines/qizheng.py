@@ -19,6 +19,7 @@ except ImportError:
     print("请运行: pip install lunar-python")
     sys.exit(1)
 
+ASTROPY_AVAILABLE = True
 try:
     from astropy.time import Time
     from astropy.coordinates import (
@@ -31,8 +32,7 @@ try:
     from astropy import units as u
     import numpy as np
 except ImportError:
-    print("请运行: pip install astropy")
-    sys.exit(1)
+    ASTROPY_AVAILABLE = False
 
 # ===== 二十八宿 (黄经度数, 参考J2000) =====
 ER_SHI_BA_XIU = [
@@ -203,6 +203,17 @@ def analyze_transit_houses(birth_houses: dict, transit_stars: dict) -> dict:
 
 
 def build_qizheng_data(solar: Solar, lon_g: float = 126.52, lat_g: float = 48.23,
+    if not ASTROPY_AVAILABLE:
+        lunar = solar.getLunar()
+        return {
+            "success": True,
+            "engine": "qizheng_degraded",
+            "note": "astropy未安装(Android环境), 降级为基础四柱数据",
+            "gregorian": {"year": solar.getYear(), "month": solar.getMonth(), "day": solar.getDay(), "hour": solar.getHour(), "minute": solar.getMinute()},
+            "lunar": {"year_ganzhi": lunar.getYearInGanZhi(), "month_ganzhi": lunar.getMonthInGanZhi(), "day_ganzhi": lunar.getDayInGanZhi(), "time_ganzhi": lunar.getTimeInGanZhi(), "shengxiao": lunar.getYearShengXiao()},
+            "stars": []
+        }
+    
                        do_transit: bool = False, transit_date_str: str = None) -> dict:
     """
     七政四余排盘 — 使用 astropy 内置星历
