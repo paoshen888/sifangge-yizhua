@@ -30,7 +30,6 @@ if os.path.isdir(_LUNAR_DIR):
         if _mn in sys.modules:
             setattr(_lp, _mn, sys.modules[_mn])
     sys.modules['lunar_python'] = _lp
-import lunar_loader  # inline lunar_python for APK
 os.chdir(DIR)
 
 # Force-register lunar_python BEFORE any engine imports are evaluated
