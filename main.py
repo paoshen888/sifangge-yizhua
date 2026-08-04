@@ -40,7 +40,19 @@ for _fn, _sr in _LS.items():
     sys.modules[_mn] = _m
     sys.modules["lunar_python." + _mn] = _m
     _LM[_mn] = _m
+# Exec in dependency order: JieQi first, then NineStar, then others
+_exec_order = ["JieQi.py", "NineStar.py"]
+for _fn in _exec_order:
+    if _fn in _LS:
+        _sr = _LS[_fn]
+        _mn = _fn[:-3]
+        _m = _LM.get(_mn)
+        if _m:
+            try: exec(_sr, _m.__dict__)
+            except Exception as _e: print("exec err", _mn, _e)
 for _fn, _sr in _LS.items():
+    if _fn in _exec_order:
+        continue
     _mn = _fn[:-3] if _fn.endswith(".py") else _fn
     _m = _LM.get(_mn)
     if _m:
