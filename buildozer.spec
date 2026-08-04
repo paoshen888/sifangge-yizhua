@@ -61,3 +61,6 @@ warn_on_root = 1
 
 
 
+
+# Keep .py source files for importlib fallback
+p4a.allow_python_src = 1
