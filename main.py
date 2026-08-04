@@ -4,8 +4,19 @@ import os, sys, json, importlib, io, threading, queue
 DIR = os.path.dirname(os.path.abspath(__file__))
 ENG_DIR = os.path.join(DIR, "python_engines")
 sys.path.insert(0, DIR)
-sys.path.insert(0, os.path.join(ENG_DIR, 'lunar_python'))
 sys.path.insert(0, ENG_DIR)
+
+# Pre-import lunar_python modules for Android P4A compatibility
+_lunar_dir = os.path.join(ENG_DIR, 'lunar_python')
+if os.path.isdir(_lunar_dir):
+    sys.path.insert(0, _lunar_dir)
+    for _fname in sorted(os.listdir(_lunar_dir)):
+        if _fname.endswith('.py') and _fname != '__init__.py':
+            _modname = _fname[:-3]
+            try:
+                exec('import {}'.format(_modname))
+            except Exception:
+                pass
 os.chdir(DIR)
 
 if __name__ == "__main__":
