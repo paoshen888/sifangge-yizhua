@@ -202,9 +202,9 @@ def analyze_transit_houses(birth_houses: dict, transit_stars: dict) -> dict:
     return transit_houses
 
 
-def build_qizheng_data(solar: Solar, lon_g: float = 126.52, lat_g: float = 48.23,
+def build_qizheng_data(solar: Solar, lon_g: float = 126.52, lat_g: float = 48.23, sex: str = "男"):
+    lunar = solar.getLunar()
     if not ASTROPY_AVAILABLE:
-        lunar = solar.getLunar()
         return {
             "success": True,
             "engine": "qizheng_degraded",
