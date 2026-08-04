@@ -1,7 +1,8 @@
 """四方阁易爪 — 入口文件"""
-import os, sys, json, subprocess
+import os, sys, json, subprocess, importlib
 DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, DIR)
+sys.path.insert(0, os.path.join(DIR, "python_engines"))
 os.chdir(DIR)
 
 if __name__ == "__main__":
@@ -9,11 +10,11 @@ if __name__ == "__main__":
 
     PORT = 8899
     ENGINE_MAP = {
-        "bazi": "bazi.py", "ziwei": "ziwei.py", "liuren": "liuren.py",
-        "qimen": "qimen.py", "liuyao": "liuyao.py", "qizheng": "qizheng.py",
-        "bazhai": "bazhai.py", "huangli": "huangli.py", "xingming": "xingming.py",
-        "haoma": "haoma.py", "fengshui": "fengshui.py", "reading": "reading.py",
-        "hehun": "hehun.py", "yunshi": "yunshi.py",
+        "bazi": "bazi", "ziwei": "ziwei", "liuren": "liuren",
+        "qimen": "qimen", "liuyao": "liuyao", "qizheng": "qizheng",
+        "bazhai": "bazhai", "huangli": "huangli", "xingming": "xingming",
+        "haoma": "haoma", "fengshui": "fengshui", "reading": "reading",
+        "hehun": "hehun", "yunshi": "yunshi",
     }
 
     class Handler(http.server.SimpleHTTPRequestHandler):
@@ -31,61 +32,73 @@ if __name__ == "__main__":
                     gender = qs.get("gender", ["男"])[0]
                     birthday = qs.get("birthday", [""])[0]
 
-                    script = ENGINE_MAP.get(engine, "bazi.py")
-                    script_path = os.path.join(DIR, 'python_engines', script)
-                    if not os.path.exists(script_path):
-                        self.send_json({"error": f"引擎 {engine} 不存在"}, 404)
-                        return
+                    mod_name = ENGINE_MAP.get(engine, "bazi")
+                    mod_name = "python_engines." + mod_name
 
                     if birthday:
                         parts = birthday.split(" ")
                         date = parts[0] if parts else birthday
                         time = parts[1] if len(parts) > 1 else "12:00"
 
-                    args = []
-                    if engine == "bazi":
-                        args = [date, time, gender]
-                    elif engine == "ziwei":
-                        args = [date, time, gender]
-                    elif engine == "qizheng":
-                        args = [date, time, gender]
-                    elif engine == "bazhai":
-                        args = [date, time, gender]
-                    elif engine == "fengshui":
-                        args = [date, time, gender]
-                    elif engine in ("liuren", "qimen"):
-                        args = [date, time]
-                    elif engine == "yunshi":
-                        args = [date, time, gender]
-                    elif engine == "xingming":
-                        name = qs.get("name", [""])[0]
-                        args = [name] if name else [date]
-                    elif engine == "haoma":
-                        number = qs.get("number", [""])[0]
-                        args = [number] if number else [date]
-                    elif engine == "hehun":
-                        args = [date, time, gender]
-                    elif engine == "reading":
-                        args = [date, time, gender]
-                    elif engine == "huangli":
-                        args = [date]
-                    else:
-                        args = [date, time, gender]
+                    # 调用引擎 main() 函数捕获 stdout
+                    try:
+                        sys.path.insert(0, os.path.join(DIR, "python_engines"))
+                        mod = importlib.import_module(mod_name)
+                    except ImportError as ie:
+                        self.send_json({"error": f"引擎 {engine} 加载失败: {ie}", "code": "IMPORT_ERROR"}, 500)
+                        return
 
-                    cmd = [sys.executable, script_path] + args
-                    r = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=DIR)
-                    output = r.stdout.strip()
-                    if not output:
-                        err = r.stderr.strip() or "引擎无输出"
-                        self.send_json({"error": err, "code": "ENGINE_EMPTY"}, 500)
+                    if hasattr(mod, "main"):
+                        # 用 StringIO 捕获标准输出
+                        import io
+                        old_stdout = sys.stdout
+                        old_argv = sys.argv
+                        try:
+                            sys.stdout = io.StringIO()
+                            if engine == "bazi":
+                                sys.argv = ["bazi", date, time, gender]
+                            elif engine == "ziwei":
+                                sys.argv = ["ziwei", date, time, gender]
+                            elif engine == "qizheng":
+                                sys.argv = ["qizheng", date, time, gender]
+                            elif engine == "bazhai":
+                                sys.argv = ["bazhai", date, time, gender]
+                            elif engine == "fengshui":
+                                sys.argv = ["fengshui", date, time, gender]
+                            elif engine in ("liuren", "qimen"):
+                                sys.argv = [engine, date, time]
+                            elif engine == "yunshi":
+                                sys.argv = ["yunshi", date, time, gender]
+                            elif engine == "xingming":
+                                name = qs.get("name", [date])[0]
+                                sys.argv = ["xingming", name]
+                            elif engine == "haoma":
+                                number = qs.get("number", [date])[0]
+                                sys.argv = ["haoma", number]
+                            elif engine == "hehun":
+                                sys.argv = ["hehun", date, time, gender]
+                            elif engine == "reading":
+                                sys.argv = ["reading", date, time, gender]
+                            elif engine == "huangli":
+                                sys.argv = ["huangli", date]
+                            else:
+                                sys.argv = [engine, date, time, gender]
+                            mod.main()
+                            output = sys.stdout.getvalue()
+                        finally:
+                            sys.stdout = old_stdout
+                            sys.argv = old_argv
+                    else:
+                        output = json.dumps({"error": "引擎无 main() 入口"}, ensure_ascii=False)
+
+                    if not output.strip():
+                        self.send_json({"error": "引擎无输出", "code": "EMPTY"}, 500)
                         return
                     try:
                         data = json.loads(output)
                     except json.JSONDecodeError:
                         data = {"raw_output": output}
                     self.send_json(data)
-                except subprocess.TimeoutExpired:
-                    self.send_json({"error": "引擎计算超时", "code": "TIMEOUT"}, 500)
                 except Exception as e:
                     self.send_json({"error": str(e), "code": "PAN_ERROR"}, 500)
             elif self.path == "/" or self.path == "":
